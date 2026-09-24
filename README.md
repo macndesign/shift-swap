@@ -209,4 +209,19 @@ bun test          # roda a suíte de testes
 bun run build     # gera dist/ (ESM + CJS + .d.ts)
 ```
 
+## Release
+
+CI (`.github/workflows/ci.yml`) roda testes e build em todo push/PR para `master`.
+Publicar uma nova versão no npm é automático a partir de uma tag:
+
+```bash
+npm version patch   # ou minor/major — atualiza a versão no package.json e cria a tag
+git push --follow-tags
+```
+
+O push da tag `vX.Y.Z` dispara `.github/workflows/publish.yml`, que roda a suíte, builda
+e publica no npm via `bun publish`. Requer o secret `NPM_TOKEN` configurado no
+repositório do GitHub (Settings → Secrets and variables → Actions), gerado como
+Automation Token em npmjs.com.
+
 Para contribuir com a lib, veja as convenções em [CLAUDE.md](./CLAUDE.md).

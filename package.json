@@ -1,6 +1,7 @@
 {
   "name": "shift-swap",
   "version": "0.1.0",
+  "description": "Biblioteca de domínio (DDD/Clean Architecture) para troca de turnos entre funcionários",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -12,6 +13,16 @@
     }
   },
   "files": ["dist"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/macndesign/shift-swap.git"
+  },
+  "homepage": "https://github.com/macndesign/shift-swap#readme",
+  "bugs": {
+    "url": "https://github.com/macndesign/shift-swap/issues"
+  },
+  "license": "MIT",
+  "author": "macndesign <macndesign@gmail.com>",
   "scripts": {
     "build": "bun run build:esm && bun run build:cjs && bun run build:types",
     "build:esm": "bun build ./src/index.ts --outdir ./dist --target node --format esm",
