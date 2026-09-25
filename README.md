@@ -213,16 +213,33 @@ bun run build     # gera dist/ (ESM + CJS + .d.ts)
 ## Release
 
 CI (`.github/workflows/ci.yml`) roda testes e build em todo push/PR para `master`.
-Publicar uma nova versão no npm é automático a partir de uma tag:
+Como `master` é uma branch protegida (só aceita mudanças via PR), o bump de versão
+precisa passar por uma branch antes de virar tag:
 
 ```bash
-npm version patch   # ou minor/major — atualiza a versão no package.json e cria a tag
-git push --follow-tags
+git checkout -b chore/release-vX.Y.Z master
+npm version patch                # ou minor/major — bump + commit + tag, local
+git push origin HEAD --follow-tags
 ```
 
-O push da tag `vX.Y.Z` dispara `.github/workflows/publish.yml`, que roda a suíte, builda
-e publica no npm via `bun publish`. Requer o secret `NPM_TOKEN` configurado no
-repositório do GitHub (Settings → Secrets and variables → Actions), gerado como
-Automation Token em npmjs.com.
+O push acima envia a branch **e** a tag `vX.Y.Z` (tags não são bloqueadas pela proteção
+do branch, só o `master` em si). A tag já dispara `.github/workflows/publish.yml`
+sozinha — a publicação no npm acontece nesse momento, **antes mesmo do PR ser
+mergeado**. Requer o secret `NPM_TOKEN` configurado no repositório do GitHub (Settings
+→ Secrets and variables → Actions), gerado como Automation Token em npmjs.com.
+
+Depois, abra um PR de `chore/release-vX.Y.Z` para `master` e faça o merge usando
+**"Create a merge commit"** (não "Squash" nem "Rebase") — isso preserva o SHA exato do
+commit pro qual a tag aponta, mantendo a tag consistente com o histórico do `master`.
+Squash/rebase criam um novo commit e deixam a tag "órfã" (apontando para um commit que
+não existe mais na história de `master`).
+
+Depois do merge:
+
+```bash
+git checkout master
+git pull
+git branch -d chore/release-vX.Y.Z
+```
 
 Para contribuir com a lib, veja as convenções em [CLAUDE.md](./CLAUDE.md).
