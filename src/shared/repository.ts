@@ -1,4 +1,4 @@
-import { Entity } from "./entity";
+import type { Entity } from "./entity";
 
 abstract class Repository<T extends Entity<unknown>> {
   abstract save(entity: T): Promise<void>;

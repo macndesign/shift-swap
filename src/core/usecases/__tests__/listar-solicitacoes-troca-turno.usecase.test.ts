@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { Turno } from "../../entities/turno.entity";
-import { ListarSolicitacoesTrocaTurnoUseCase } from "../listar-solicitacoes-troca-turno.usecase";
 import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
+import { ListarSolicitacoesTrocaTurnoUseCase } from "../listar-solicitacoes-troca-turno.usecase";
 
 function criarTurno(funcionarioId: string) {
   return Turno.create({

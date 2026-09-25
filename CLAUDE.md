@@ -110,6 +110,7 @@ propósito: os repositórios in-memory (são só para teste) e as classes base d
 ## Comandos de verificação
 
 ```bash
+bun run lint                              # Biome: formatação + lint
 bun test                                  # suíte inteira
 ./node_modules/.bin/tsc.exe --noEmit      # type-check completo (inclui testes)
 bun run build                             # build real: ESM + CJS + .d.ts
@@ -118,6 +119,14 @@ bun run build                             # build real: ESM + CJS + .d.ts
 Neste ambiente, `npx tsc`/`tsc` direto falha com um erro enganoso ("This is not the tsc
 command you are looking for") — sempre use o binário local (`./node_modules/.bin/tsc.exe`)
 ou os scripts do `package.json`.
+
+Formatação e lint são via [Biome](https://biomejs.dev) (`biome.json`), não ESLint/Prettier
+— decisão consciente pra manter uma dependência só, dado o resto do projeto ser minimalista
+em devDependencies. `bun run lint:fix`/`bun run format` corrigem automaticamente. Um hook de
+pre-commit (`simple-git-hooks` + `lint-staged`, instalado via `postinstall`) já roda
+`biome check --write` nos arquivos staged. Ao adicionar uma exceção de lint real (não um
+falso positivo), use um comentário `// biome-ignore lint/<regra>: <motivo>` explicando o
+porquê — não desative a regra globalmente no `biome.json` sem necessidade.
 
 `tsconfig.build.json` estende `tsconfig.json` excluindo `__tests__`/`*.test.ts` — é ele
 quem o script `build:types` usa, para não vazar tipos de teste no `.d.ts` publicado.

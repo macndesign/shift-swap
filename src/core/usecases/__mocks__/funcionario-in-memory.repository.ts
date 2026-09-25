@@ -1,4 +1,4 @@
-import { FuncionarioEntity } from "../../entities/funcionario.entity";
+import type { FuncionarioEntity } from "../../entities/funcionario.entity";
 import { FuncionarioRepository } from "../../ports/funcionario.repository";
 
 class FuncionarioInMemoryRepository extends FuncionarioRepository {

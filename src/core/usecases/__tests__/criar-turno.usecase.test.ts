@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { CriarTurnoUseCase } from "../criar-turno.usecase";
 import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
+import { CriarTurnoUseCase } from "../criar-turno.usecase";
 
 function criarSut() {
   const turnoRepository = new TurnoInMemoryRepository();

@@ -25,7 +25,7 @@ class Result<T> {
   public getValue(): T {
     if (this.isFailure) {
       throw new Error(
-        `Cannot get the value of a failed result. Use 'error' instead. Error: ${this.formatError()}`
+        `Cannot get the value of a failed result. Use 'error' instead. Error: ${this.formatError()}`,
       );
     }
     return this._value as T;
@@ -39,6 +39,7 @@ class Result<T> {
     return new Result<U>(false, error);
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: combine só olha isFailure/error, o tipo do valor de sucesso é irrelevante aqui.
   public static combine(results: Result<any>[]): Result<any> {
     for (const result of results) {
       if (result.isFailure) return result;

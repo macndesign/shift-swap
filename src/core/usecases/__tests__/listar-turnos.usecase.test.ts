@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Turno } from "../../entities/turno.entity";
-import { ListarTurnosUseCase } from "../listar-turnos.usecase";
 import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
+import { ListarTurnosUseCase } from "../listar-turnos.usecase";
 
 function criarSut() {
   const turnoRepository = new TurnoInMemoryRepository();

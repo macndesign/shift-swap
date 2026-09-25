@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { FuncionarioEntity } from "../../entities/funcionario.entity";
-import { BuscarFuncionarioPorIdUseCase } from "../buscar-funcionario-por-id.usecase";
 import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
+import { BuscarFuncionarioPorIdUseCase } from "../buscar-funcionario-por-id.usecase";
 
 function criarSut() {
   const funcionarioRepository = new FuncionarioInMemoryRepository();

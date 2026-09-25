@@ -1,6 +1,6 @@
 import { Entity } from "../../shared/entity";
 import { Result } from "../../shared/result";
-import { Turno } from "./turno.entity";
+import type { Turno } from "./turno.entity";
 
 type StatusSolicitacaoTrocaTurno = "pendente" | "aceita" | "cancelada";
 
@@ -66,21 +66,21 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
 
   static create(
     props: CreateSolicitacaoTrocaTurnoProps,
-    id?: string
+    id?: string,
   ): Result<SolicitacaoTrocaTurno> {
     if (props.solicitanteId !== props.turno.funcionarioId) {
       return Result.fail<SolicitacaoTrocaTurno>(
-        "Somente o funcionário dono do turno pode solicitar a troca"
+        "Somente o funcionário dono do turno pode solicitar a troca",
       );
     }
 
     return Result.ok<SolicitacaoTrocaTurno>(
       new SolicitacaoTrocaTurno(
         { turno: props.turno, solicitanteId: props.solicitanteId, status: "pendente" },
-        id
-      )
+        id,
+      ),
     );
   }
 }
 
-export { SolicitacaoTrocaTurno, StatusSolicitacaoTrocaTurno };
+export { SolicitacaoTrocaTurno, type StatusSolicitacaoTrocaTurno };

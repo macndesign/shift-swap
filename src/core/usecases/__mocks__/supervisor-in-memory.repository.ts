@@ -1,4 +1,4 @@
-import { SupervisorEntity } from "../../entities/supervisor.entity";
+import type { SupervisorEntity } from "../../entities/supervisor.entity";
 import { SupervisorRepository } from "../../ports/supervisor.repository";
 
 class SupervisorInMemoryRepository extends SupervisorRepository {

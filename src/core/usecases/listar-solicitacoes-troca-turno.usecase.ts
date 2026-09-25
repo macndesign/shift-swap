@@ -1,7 +1,7 @@
 import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
-import { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
-import { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
+import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
+import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
 
 class ListarSolicitacoesTrocaTurnoUseCase extends UseCase<void, SolicitacaoTrocaTurno[]> {
   constructor(private readonly solicitacaoRepository: SolicitacaoTrocaTurnoRepository) {

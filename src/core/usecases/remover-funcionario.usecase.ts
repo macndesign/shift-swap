@@ -1,6 +1,6 @@
 import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
-import { FuncionarioRepository } from "../ports/funcionario.repository";
+import type { FuncionarioRepository } from "../ports/funcionario.repository";
 
 interface RemoverFuncionarioInput {
   id: string;

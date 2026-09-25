@@ -95,10 +95,10 @@ class Turno extends Entity<TurnoProps> {
           horaFim: props.horaFim,
           funcionarioId: props.funcionarioId,
         },
-        id
-      )
+        id,
+      ),
     );
   }
 }
 
-export { Turno, TurnoProps };
+export { Turno, type TurnoProps };

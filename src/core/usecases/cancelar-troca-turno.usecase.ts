@@ -1,7 +1,7 @@
 import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
-import { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
-import { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
+import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
+import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
 
 interface CancelarTrocaTurnoInput {
   solicitacaoId: string;
@@ -20,7 +20,9 @@ class CancelarTrocaTurnoUseCase extends UseCase<CancelarTrocaTurnoInput, Solicit
     }
 
     if (solicitacao.solicitanteId !== input.solicitanteId) {
-      return Result.fail<SolicitacaoTrocaTurno>("Somente o solicitante pode cancelar a solicitação");
+      return Result.fail<SolicitacaoTrocaTurno>(
+        "Somente o solicitante pode cancelar a solicitação",
+      );
     }
 
     const cancelarOrError = solicitacao.cancelar();

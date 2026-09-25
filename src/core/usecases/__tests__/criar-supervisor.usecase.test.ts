@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { CriarSupervisorUseCase } from "../criar-supervisor.usecase";
 import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository";
+import { CriarSupervisorUseCase } from "../criar-supervisor.usecase";
 
 function criarSut() {
   const supervisorRepository = new SupervisorInMemoryRepository();

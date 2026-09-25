@@ -1,6 +1,6 @@
 import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
-import { TurnoRepository } from "../ports/turno.repository";
+import type { TurnoRepository } from "../ports/turno.repository";
 
 interface RemoverTurnoInput {
   id: string;

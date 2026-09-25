@@ -1,7 +1,7 @@
 import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
-import { Turno, TurnoProps } from "../entities/turno.entity";
-import { TurnoRepository } from "../ports/turno.repository";
+import { Turno, type TurnoProps } from "../entities/turno.entity";
+import type { TurnoRepository } from "../ports/turno.repository";
 
 class CriarTurnoUseCase extends UseCase<TurnoProps, Turno> {
   constructor(private readonly turnoRepository: TurnoRepository) {

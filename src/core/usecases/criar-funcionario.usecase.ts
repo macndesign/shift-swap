@@ -1,7 +1,7 @@
 import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
 import { FuncionarioEntity } from "../entities/funcionario.entity";
-import { FuncionarioRepository } from "../ports/funcionario.repository";
+import type { FuncionarioRepository } from "../ports/funcionario.repository";
 
 interface CriarFuncionarioInput {
   id?: string;

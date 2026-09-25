@@ -58,4 +58,4 @@ class PessoaEntity extends Entity<PessoaProps> {
   }
 }
 
-export { PessoaEntity, PessoaProps, CreatePessoaProps };
+export { type CreatePessoaProps, PessoaEntity, type PessoaProps };

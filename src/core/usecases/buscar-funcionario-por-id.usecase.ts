@@ -1,13 +1,16 @@
 import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
-import { FuncionarioEntity } from "../entities/funcionario.entity";
-import { FuncionarioRepository } from "../ports/funcionario.repository";
+import type { FuncionarioEntity } from "../entities/funcionario.entity";
+import type { FuncionarioRepository } from "../ports/funcionario.repository";
 
 interface BuscarFuncionarioPorIdInput {
   id: string;
 }
 
-class BuscarFuncionarioPorIdUseCase extends UseCase<BuscarFuncionarioPorIdInput, FuncionarioEntity> {
+class BuscarFuncionarioPorIdUseCase extends UseCase<
+  BuscarFuncionarioPorIdInput,
+  FuncionarioEntity
+> {
   constructor(private readonly funcionarioRepository: FuncionarioRepository) {
     super();
   }

@@ -1,4 +1,4 @@
-import { Turno } from "../../entities/turno.entity";
+import type { Turno } from "../../entities/turno.entity";
 import { TurnoRepository } from "../../ports/turno.repository";
 
 class TurnoInMemoryRepository extends TurnoRepository {
@@ -26,7 +26,7 @@ class TurnoInMemoryRepository extends TurnoRepository {
 
   async findByFuncionarioIdAndData(funcionarioId: string, data: string): Promise<Turno[]> {
     return Array.from(this.items.values()).filter(
-      (turno) => turno.funcionarioId === funcionarioId && turno.data === data
+      (turno) => turno.funcionarioId === funcionarioId && turno.data === data,
     );
   }
 }

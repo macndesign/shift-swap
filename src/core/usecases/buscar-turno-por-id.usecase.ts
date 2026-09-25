@@ -1,7 +1,7 @@
 import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
-import { Turno } from "../entities/turno.entity";
-import { TurnoRepository } from "../ports/turno.repository";
+import type { Turno } from "../entities/turno.entity";
+import type { TurnoRepository } from "../ports/turno.repository";
 
 interface BuscarTurnoPorIdInput {
   id: string;

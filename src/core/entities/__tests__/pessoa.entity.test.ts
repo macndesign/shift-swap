@@ -22,7 +22,7 @@ describe("PessoaEntity", () => {
   it("usa o id informado quando fornecido", () => {
     const pessoa = PessoaEntity.create(
       { name: "Maria", email: "maria@exemplo.com" },
-      "id-fixo"
+      "id-fixo",
     ).getValue();
 
     expect(pessoa.id).toBe("id-fixo");
@@ -52,11 +52,11 @@ describe("PessoaEntity", () => {
   it("considera duas PessoaEntity com o mesmo id iguais, mesmo com props diferentes", () => {
     const a = PessoaEntity.create(
       { name: "Maria", email: "maria@exemplo.com" },
-      "mesmo-id"
+      "mesmo-id",
     ).getValue();
     const b = PessoaEntity.create(
       { name: "Joana", email: "joana@exemplo.com" },
-      "mesmo-id"
+      "mesmo-id",
     ).getValue();
 
     expect(a.equals(b)).toBe(true);
