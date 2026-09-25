@@ -205,6 +205,7 @@ enquanto um `Supervisor` pode chamar `ListarTurnosUseCase` para ver tudo).
 ## Scripts (para desenvolver a própria lib)
 
 ```bash
+bun run lint      # formatação + lint (Biome)
 bun test          # roda a suíte de testes
 bun run build     # gera dist/ (ESM + CJS + .d.ts)
 ```

@@ -2,10 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { FuncionarioEntity } from "../../entities/funcionario.entity";
 import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { Turno } from "../../entities/turno.entity";
-import { AceitarTrocaTurnoUseCase } from "../aceitar-troca-turno.usecase";
 import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
 import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
 import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
+import { AceitarTrocaTurnoUseCase } from "../aceitar-troca-turno.usecase";
 
 function criarTurno(funcionarioId: string, horaInicio = "08:00", horaFim = "12:00") {
   return Turno.create({
@@ -27,7 +27,7 @@ function criarSut() {
   const useCase = new AceitarTrocaTurnoUseCase(
     funcionarioRepository,
     turnoRepository,
-    solicitacaoRepository
+    solicitacaoRepository,
   );
 
   return { funcionarioRepository, turnoRepository, solicitacaoRepository, useCase };

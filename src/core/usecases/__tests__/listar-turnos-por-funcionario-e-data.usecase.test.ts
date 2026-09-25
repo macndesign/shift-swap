@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Turno } from "../../entities/turno.entity";
-import { ListarTurnosPorFuncionarioEDataUseCase } from "../listar-turnos-por-funcionario-e-data.usecase";
 import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
+import { ListarTurnosPorFuncionarioEDataUseCase } from "../listar-turnos-por-funcionario-e-data.usecase";
 
 function criarTurno(funcionarioId: string, data: string, horaInicio = "08:00", horaFim = "12:00") {
   return Turno.create({ data, horaInicio, horaFim, funcionarioId }).getValue();

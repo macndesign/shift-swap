@@ -1,7 +1,7 @@
 import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
 import { SupervisorEntity } from "../entities/supervisor.entity";
-import { SupervisorRepository } from "../ports/supervisor.repository";
+import type { SupervisorRepository } from "../ports/supervisor.repository";
 
 interface CriarSupervisorInput {
   id?: string;

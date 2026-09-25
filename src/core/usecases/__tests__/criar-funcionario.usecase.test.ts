@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { CriarFuncionarioUseCase } from "../criar-funcionario.usecase";
 import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
+import { CriarFuncionarioUseCase } from "../criar-funcionario.usecase";
 
 function criarSut() {
   const funcionarioRepository = new FuncionarioInMemoryRepository();

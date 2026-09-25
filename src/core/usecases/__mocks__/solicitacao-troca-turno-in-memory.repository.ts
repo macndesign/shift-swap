@@ -1,4 +1,4 @@
-import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
+import type { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { SolicitacaoTrocaTurnoRepository } from "../../ports/solicitacao-troca-turno.repository";
 
 class SolicitacaoTrocaTurnoInMemoryRepository extends SolicitacaoTrocaTurnoRepository {
@@ -26,13 +26,14 @@ class SolicitacaoTrocaTurnoInMemoryRepository extends SolicitacaoTrocaTurnoRepos
 
   async findPendentesByTurnoId(turnoId: string): Promise<SolicitacaoTrocaTurno[]> {
     return Array.from(this.items.values()).filter(
-      (solicitacao) => solicitacao.turno.id === turnoId && solicitacao.status === "pendente"
+      (solicitacao) => solicitacao.turno.id === turnoId && solicitacao.status === "pendente",
     );
   }
 
   async findPendentesExcetoSolicitante(solicitanteId: string): Promise<SolicitacaoTrocaTurno[]> {
     return Array.from(this.items.values()).filter(
-      (solicitacao) => solicitacao.status === "pendente" && solicitacao.solicitanteId !== solicitanteId
+      (solicitacao) =>
+        solicitacao.status === "pendente" && solicitacao.solicitanteId !== solicitanteId,
     );
   }
 }

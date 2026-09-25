@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { FuncionarioEntity } from "../../entities/funcionario.entity";
-import { ListarFuncionariosUseCase } from "../listar-funcionarios.usecase";
 import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
+import { ListarFuncionariosUseCase } from "../listar-funcionarios.usecase";
 
 function criarSut() {
   const funcionarioRepository = new FuncionarioInMemoryRepository();
@@ -22,8 +22,14 @@ describe("ListarFuncionariosUseCase", () => {
 
   it("retorna todos os funcionários cadastrados", async () => {
     const { funcionarioRepository, useCase } = criarSut();
-    const maria = FuncionarioEntity.create({ name: "Maria", email: "maria@exemplo.com" }).getValue();
-    const joana = FuncionarioEntity.create({ name: "Joana", email: "joana@exemplo.com" }).getValue();
+    const maria = FuncionarioEntity.create({
+      name: "Maria",
+      email: "maria@exemplo.com",
+    }).getValue();
+    const joana = FuncionarioEntity.create({
+      name: "Joana",
+      email: "joana@exemplo.com",
+    }).getValue();
     await funcionarioRepository.save(maria);
     await funcionarioRepository.save(joana);
 

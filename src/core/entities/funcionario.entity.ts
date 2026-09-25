@@ -1,5 +1,5 @@
 import { Result } from "../../shared/result";
-import { CreatePessoaProps, PessoaEntity, PessoaProps } from "./pessoa.entity";
+import { type CreatePessoaProps, PessoaEntity, type PessoaProps } from "./pessoa.entity";
 
 class FuncionarioEntity extends PessoaEntity {
   private constructor(props: PessoaProps, id?: string) {

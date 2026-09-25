@@ -25,7 +25,7 @@ describe("SupervisorEntity", () => {
   it("usa o id informado quando fornecido, permitindo vincular a um usuário autenticado", () => {
     const supervisor = SupervisorEntity.create(
       { name: "Maria", email: "maria@exemplo.com" },
-      "auth-user-id"
+      "auth-user-id",
     ).getValue();
 
     expect(supervisor.id).toBe("auth-user-id");

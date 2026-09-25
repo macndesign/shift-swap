@@ -35,4 +35,4 @@ type Either<L, R> = Left<L, R> | Right<L, R>;
 const left = <L, R>(value: L): Either<L, R> => new Left<L, R>(value);
 const right = <L, R>(value: R): Either<L, R> => new Right<L, R>(value);
 
-export { Either, Left, Right, left, right };
+export { type Either, Left, left, Right, right };

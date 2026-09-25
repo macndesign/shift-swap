@@ -37,10 +37,7 @@ abstract class ValueObject<T> {
     const bKeys = Object.keys(b);
     if (aKeys.length !== bKeys.length) return false;
     return aKeys.every((key) =>
-      ValueObject.isEqual(
-        (a as Record<string, unknown>)[key],
-        (b as Record<string, unknown>)[key]
-      )
+      ValueObject.isEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]),
     );
   }
 }
