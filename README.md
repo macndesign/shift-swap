@@ -203,6 +203,11 @@ enquanto um `Supervisor` pode chamar `ListarTurnosUseCase` para ver tudo).
 > `SolicitacaoTrocaTurno` propositalmente não tem update/delete genérico — só
 > `create`/`read` e as transições de estado (`aprovar`/`rejeitar`/`cancelar`/`expirar`), para preservar o
 > histórico da troca.
+>
+> Para **reidratar** uma solicitação já persistida (nos adapters de repositório), use
+> `SolicitacaoTrocaTurno.reconstituir(props, id)`. Ele devolve a entidade no estado salvo
+> sem executar transições (não reatribui o turno nem regrava `decididoEm`) e só valida se
+> os dados são coerentes com o status.
 
 ## Scripts (para desenvolver a própria lib)
 

@@ -157,4 +157,183 @@ describe("SolicitacaoTrocaTurno", () => {
     expect(result.isFailure).toBe(true);
     expect(result.error).toBe("Solicitação de troca não está mais pendente");
   });
+
+  describe("reconstituir", () => {
+    const decididoEm = new Date("2026-09-20T10:00:00.000Z");
+
+    it("reconstitui uma solicitação pendente sem alterar o turno", () => {
+      const turno = criarTurno("func-a");
+
+      const result = SolicitacaoTrocaTurno.reconstituir(
+        { turno, solicitanteId: "func-a", status: "pendente" },
+        "sol-1",
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const solicitacao = result.getValue();
+      expect(solicitacao.id).toBe("sol-1");
+      expect(solicitacao.status).toBe("pendente");
+      expect(solicitacao.turno).toBe(turno);
+      expect(turno.funcionarioId).toBe("func-a");
+    });
+
+    it("reconstitui uma solicitação aprovada preservando a decisão e o turno", () => {
+      const turno = criarTurno("func-b");
+
+      const result = SolicitacaoTrocaTurno.reconstituir(
+        {
+          turno,
+          solicitanteId: "func-a",
+          status: "aprovada",
+          destinatarioId: "func-b",
+          decididoPorId: "sup-1",
+          decididoEm,
+        },
+        "sol-1",
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const solicitacao = result.getValue();
+      expect(solicitacao.status).toBe("aprovada");
+      expect(solicitacao.destinatarioId).toBe("func-b");
+      expect(solicitacao.decididoPorId).toBe("sup-1");
+      expect(solicitacao.decididoEm).toBe(decididoEm);
+      expect(turno.funcionarioId).toBe("func-b");
+    });
+
+    it("reconstitui uma solicitação rejeitada com o motivo", () => {
+      const result = SolicitacaoTrocaTurno.reconstituir(
+        {
+          turno: criarTurno("func-a"),
+          solicitanteId: "func-a",
+          status: "rejeitada",
+          decididoPorId: "sup-1",
+          decididoEm,
+          motivo: "Equipe reduzida",
+        },
+        "sol-1",
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.getValue().status).toBe("rejeitada");
+      expect(result.getValue().motivo).toBe("Equipe reduzida");
+    });
+
+    it("reconstitui solicitações canceladas e expiradas", () => {
+      for (const status of ["cancelada", "expirada"] as const) {
+        const result = SolicitacaoTrocaTurno.reconstituir(
+          { turno: criarTurno("func-a"), solicitanteId: "func-a", status },
+          "sol-1",
+        );
+
+        expect(result.isSuccess).toBe(true);
+        expect(result.getValue().status).toBe(status);
+      }
+    });
+
+    it("mantém as transições do estado reconstituído", () => {
+      const solicitacao = SolicitacaoTrocaTurno.reconstituir(
+        { turno: criarTurno("func-a"), solicitanteId: "func-a", status: "pendente" },
+        "sol-1",
+      ).getValue();
+      const aprovada = SolicitacaoTrocaTurno.reconstituir(
+        {
+          turno: criarTurno("func-b"),
+          solicitanteId: "func-a",
+          status: "aprovada",
+          destinatarioId: "func-b",
+          decididoPorId: "sup-1",
+          decididoEm,
+        },
+        "sol-2",
+      ).getValue();
+
+      expect(solicitacao.cancelar().isSuccess).toBe(true);
+      expect(aprovada.cancelar().error).toBe("Solicitação de troca não está mais pendente");
+    });
+
+    it("falha quando o id está vazio", () => {
+      const result = SolicitacaoTrocaTurno.reconstituir(
+        { turno: criarTurno("func-a"), solicitanteId: "func-a", status: "pendente" },
+        "  ",
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe("Id da solicitação não pode ser vazio");
+    });
+
+    it("falha quando o solicitante está vazio", () => {
+      const result = SolicitacaoTrocaTurno.reconstituir(
+        { turno: criarTurno("func-a"), solicitanteId: "", status: "pendente" },
+        "sol-1",
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe("Id do solicitante não pode ser vazio");
+    });
+
+    it("falha quando o status é desconhecido", () => {
+      const result = SolicitacaoTrocaTurno.reconstituir(
+        {
+          turno: criarTurno("func-a"),
+          solicitanteId: "func-a",
+          status: "inexistente" as unknown as "pendente",
+        },
+        "sol-1",
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe("Status inválido: inexistente");
+    });
+
+    it("falha ao reconstituir aprovada sem destinatário, supervisor ou data da decisão", () => {
+      const result = SolicitacaoTrocaTurno.reconstituir(
+        {
+          turno: criarTurno("func-b"),
+          solicitanteId: "func-a",
+          status: "aprovada",
+          destinatarioId: "func-b",
+        },
+        "sol-1",
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe(
+        "Solicitação aprovada exige destinatário, supervisor e data da decisão",
+      );
+    });
+
+    it("falha ao reconstituir rejeitada sem supervisor, data da decisão ou motivo", () => {
+      const result = SolicitacaoTrocaTurno.reconstituir(
+        {
+          turno: criarTurno("func-a"),
+          solicitanteId: "func-a",
+          status: "rejeitada",
+          decididoPorId: "sup-1",
+          decididoEm,
+        },
+        "sol-1",
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBe("Solicitação rejeitada exige supervisor, data da decisão e motivo");
+    });
+
+    it("falha ao reconstituir pendente, cancelada ou expirada com dados de decisão", () => {
+      for (const status of ["pendente", "cancelada", "expirada"] as const) {
+        const result = SolicitacaoTrocaTurno.reconstituir(
+          {
+            turno: criarTurno("func-a"),
+            solicitanteId: "func-a",
+            status,
+            decididoPorId: "sup-1",
+          },
+          "sol-1",
+        );
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error).toBe(`Solicitação ${status} não pode ter dados de decisão`);
+      }
+    });
+  });
 });
