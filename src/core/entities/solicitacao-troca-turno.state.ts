@@ -3,6 +3,14 @@ import type { Turno } from "./turno.entity";
 
 type StatusSolicitacaoTrocaTurno = "pendente" | "aprovada" | "rejeitada" | "cancelada" | "expirada";
 
+const STATUS_SOLICITACAO: readonly StatusSolicitacaoTrocaTurno[] = [
+  "pendente",
+  "aprovada",
+  "rejeitada",
+  "cancelada",
+  "expirada",
+];
+
 interface AprovarSolicitacaoProps {
   supervisorId: string;
   destinatarioId: string;
@@ -165,5 +173,6 @@ export {
   estadoDe,
   type MudancaSolicitacao,
   type RejeitarSolicitacaoProps,
+  STATUS_SOLICITACAO,
   type StatusSolicitacaoTrocaTurno,
 };

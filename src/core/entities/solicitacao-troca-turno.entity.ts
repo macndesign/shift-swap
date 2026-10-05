@@ -7,6 +7,7 @@ import {
   estadoDe,
   type MudancaSolicitacao,
   type RejeitarSolicitacaoProps,
+  STATUS_SOLICITACAO,
   type StatusSolicitacaoTrocaTurno,
 } from "./solicitacao-troca-turno.state";
 import type { Turno } from "./turno.entity";
@@ -25,6 +26,8 @@ interface CreateSolicitacaoTrocaTurnoProps {
   turno: Turno;
   solicitanteId: string;
 }
+
+type ReconstituirSolicitacaoTrocaTurnoProps = SolicitacaoTrocaTurnoProps;
 
 class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
   private constructor(props: SolicitacaoTrocaTurnoProps, id?: string) {
@@ -118,6 +121,60 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
       ),
     );
   }
+
+  /**
+   * Recria uma solicitação já persistida, no estado em que foi salva. Não executa as
+   * transições (nada é reatribuído nem tem `decididoEm` regravado): só confere se os
+   * dados são coerentes com o status. Destinado a adapters de repositório.
+   */
+  static reconstituir(
+    props: ReconstituirSolicitacaoTrocaTurnoProps,
+    id: string,
+  ): Result<SolicitacaoTrocaTurno> {
+    if (!id || id.trim().length === 0) {
+      return Result.fail<SolicitacaoTrocaTurno>("Id da solicitação não pode ser vazio");
+    }
+    if (!props.solicitanteId || props.solicitanteId.trim().length === 0) {
+      return Result.fail<SolicitacaoTrocaTurno>("Id do solicitante não pode ser vazio");
+    }
+    if (!STATUS_SOLICITACAO.includes(props.status)) {
+      return Result.fail<SolicitacaoTrocaTurno>(`Status inválido: ${props.status}`);
+    }
+
+    const coerenciaOrError = SolicitacaoTrocaTurno.validarCoerencia(props);
+    if (coerenciaOrError.isFailure) {
+      return Result.fail<SolicitacaoTrocaTurno>(coerenciaOrError.error as string | Error);
+    }
+
+    return Result.ok<SolicitacaoTrocaTurno>(new SolicitacaoTrocaTurno({ ...props }, id));
+  }
+
+  private static validarCoerencia(props: SolicitacaoTrocaTurnoProps): Result<void> {
+    const temDecisao = Boolean(props.decididoPorId && props.decididoEm);
+
+    if (props.status === "aprovada" && !(props.destinatarioId && temDecisao)) {
+      return Result.fail<void>(
+        "Solicitação aprovada exige destinatário, supervisor e data da decisão",
+      );
+    }
+    if (props.status === "rejeitada" && !(temDecisao && props.motivo)) {
+      return Result.fail<void>("Solicitação rejeitada exige supervisor, data da decisão e motivo");
+    }
+
+    const semDecisao = ["pendente", "cancelada", "expirada"].includes(props.status);
+    if (
+      semDecisao &&
+      (props.decididoPorId || props.decididoEm || props.motivo || props.destinatarioId)
+    ) {
+      return Result.fail<void>(`Solicitação ${props.status} não pode ter dados de decisão`);
+    }
+
+    return Result.ok<void>();
+  }
 }
 
-export { SolicitacaoTrocaTurno, type StatusSolicitacaoTrocaTurno };
+export {
+  type ReconstituirSolicitacaoTrocaTurnoProps,
+  SolicitacaoTrocaTurno,
+  type StatusSolicitacaoTrocaTurno,
+};

@@ -27,6 +27,8 @@ Bun/Node. Ver [README.md](./README.md) para a perspectiva de quem consome a lib.
   Modelada como entidade própria (não um campo em Turno) para manter histórico/auditoria
   (`decididoPorId`, `decididoEm`, `motivo`) — por isso não tem update/delete genérico, só
   `create` + as transições `aprovar`/`rejeitar`/`cancelar`/`expirar`.
+  `reconstituir(props, id)` existe só para adapters de repositório reidratarem uma
+  solicitação salva (sem rodar transições).
 
 ## Estrutura de pastas
 
