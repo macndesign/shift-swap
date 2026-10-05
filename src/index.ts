@@ -16,7 +16,7 @@ export { FuncionarioRepository } from "./core/ports/funcionario.repository";
 export { SolicitacaoTrocaTurnoRepository } from "./core/ports/solicitacao-troca-turno.repository";
 export { SupervisorRepository } from "./core/ports/supervisor.repository";
 export { TurnoRepository } from "./core/ports/turno.repository";
-export { AceitarTrocaTurnoUseCase } from "./core/usecases/aceitar-troca-turno.usecase";
+export { AprovarTrocaTurnoUseCase } from "./core/usecases/aprovar-troca-turno.usecase";
 export { AtualizarFuncionarioUseCase } from "./core/usecases/atualizar-funcionario.usecase";
 export { AtualizarTurnoUseCase } from "./core/usecases/atualizar-turno.usecase";
 export { BuscarFuncionarioPorIdUseCase } from "./core/usecases/buscar-funcionario-por-id.usecase";
@@ -29,11 +29,13 @@ export { CriarFuncionarioUseCase } from "./core/usecases/criar-funcionario.useca
 export { CriarSupervisorUseCase } from "./core/usecases/criar-supervisor.usecase";
 // Use-cases: Turno
 export { CriarTurnoUseCase } from "./core/usecases/criar-turno.usecase";
+export { ExpirarSolicitacoesTrocaTurnoUseCase } from "./core/usecases/expirar-solicitacoes-troca-turno.usecase";
 export { ListarFuncionariosUseCase } from "./core/usecases/listar-funcionarios.usecase";
 export { ListarSolicitacoesTrocaTurnoUseCase } from "./core/usecases/listar-solicitacoes-troca-turno.usecase";
 export { ListarTurnosUseCase } from "./core/usecases/listar-turnos.usecase";
 export { ListarTurnosDisponiveisParaTrocaUseCase } from "./core/usecases/listar-turnos-disponiveis-para-troca.usecase";
 export { ListarTurnosPorFuncionarioEDataUseCase } from "./core/usecases/listar-turnos-por-funcionario-e-data.usecase";
+export { RejeitarTrocaTurnoUseCase } from "./core/usecases/rejeitar-troca-turno.usecase";
 export { RemoverFuncionarioUseCase } from "./core/usecases/remover-funcionario.usecase";
 export { RemoverTurnoUseCase } from "./core/usecases/remover-turno.usecase";
 // Use-cases: Troca de turno

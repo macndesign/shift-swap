@@ -4,19 +4,22 @@ import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.
 import type { Turno } from "../entities/turno.entity";
 import type { FuncionarioRepository } from "../ports/funcionario.repository";
 import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
+import type { SupervisorRepository } from "../ports/supervisor.repository";
 import type { TurnoRepository } from "../ports/turno.repository";
 
-interface AceitarTrocaTurnoInput {
+interface AprovarTrocaTurnoInput {
   solicitacaoId: string;
-  funcionarioId: string;
+  supervisorId: string;
+  destinatarioId: string;
 }
 
 function horariosSeSobrepoem(a: Turno, b: Turno): boolean {
   return a.horaInicio < b.horaFim && b.horaInicio < a.horaFim;
 }
 
-class AceitarTrocaTurnoUseCase extends UseCase<AceitarTrocaTurnoInput, SolicitacaoTrocaTurno> {
+class AprovarTrocaTurnoUseCase extends UseCase<AprovarTrocaTurnoInput, SolicitacaoTrocaTurno> {
   constructor(
+    private readonly supervisorRepository: SupervisorRepository,
     private readonly funcionarioRepository: FuncionarioRepository,
     private readonly turnoRepository: TurnoRepository,
     private readonly solicitacaoRepository: SolicitacaoTrocaTurnoRepository,
@@ -24,31 +27,39 @@ class AceitarTrocaTurnoUseCase extends UseCase<AceitarTrocaTurnoInput, Solicitac
     super();
   }
 
-  async execute(input: AceitarTrocaTurnoInput): Promise<Result<SolicitacaoTrocaTurno>> {
+  async execute(input: AprovarTrocaTurnoInput): Promise<Result<SolicitacaoTrocaTurno>> {
+    const supervisor = await this.supervisorRepository.findById(input.supervisorId);
+    if (!supervisor) {
+      return Result.fail<SolicitacaoTrocaTurno>("Supervisor não encontrado");
+    }
+
     const solicitacao = await this.solicitacaoRepository.findById(input.solicitacaoId);
     if (!solicitacao) {
       return Result.fail<SolicitacaoTrocaTurno>("Solicitação não encontrada");
     }
 
-    const funcionario = await this.funcionarioRepository.findById(input.funcionarioId);
-    if (!funcionario) {
+    const destinatario = await this.funcionarioRepository.findById(input.destinatarioId);
+    if (!destinatario) {
       return Result.fail<SolicitacaoTrocaTurno>("Funcionário não encontrado");
     }
 
-    const turnosDoFuncionario = await this.turnoRepository.findByFuncionarioIdAndData(
-      input.funcionarioId,
+    const turnosDoDestinatario = await this.turnoRepository.findByFuncionarioIdAndData(
+      input.destinatarioId,
       solicitacao.turno.data,
     );
-    const temConflito = turnosDoFuncionario.some((turno) =>
+    const temConflito = turnosDoDestinatario.some((turno) =>
       horariosSeSobrepoem(turno, solicitacao.turno),
     );
     if (temConflito) {
       return Result.fail<SolicitacaoTrocaTurno>("Funcionário já possui um turno nesse horário");
     }
 
-    const aceitarOrError = solicitacao.aceitar(input.funcionarioId);
-    if (aceitarOrError.isFailure) {
-      return Result.fail<SolicitacaoTrocaTurno>(aceitarOrError.error as string | Error);
+    const aprovarOrError = solicitacao.aprovar({
+      supervisorId: input.supervisorId,
+      destinatarioId: input.destinatarioId,
+    });
+    if (aprovarOrError.isFailure) {
+      return Result.fail<SolicitacaoTrocaTurno>(aprovarOrError.error as string | Error);
     }
 
     await this.turnoRepository.update(solicitacao.turno);
@@ -58,4 +69,4 @@ class AceitarTrocaTurnoUseCase extends UseCase<AceitarTrocaTurnoInput, Solicitac
   }
 }
 
-export { AceitarTrocaTurnoUseCase };
+export { AprovarTrocaTurnoUseCase };
