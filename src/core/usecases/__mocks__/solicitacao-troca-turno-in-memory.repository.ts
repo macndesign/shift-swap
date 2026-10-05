@@ -24,6 +24,12 @@ class SolicitacaoTrocaTurnoInMemoryRepository extends SolicitacaoTrocaTurnoRepos
     return Array.from(this.items.values());
   }
 
+  async findPendentes(): Promise<SolicitacaoTrocaTurno[]> {
+    return Array.from(this.items.values()).filter(
+      (solicitacao) => solicitacao.status === "pendente",
+    );
+  }
+
   async findPendentesByTurnoId(turnoId: string): Promise<SolicitacaoTrocaTurno[]> {
     return Array.from(this.items.values()).filter(
       (solicitacao) => solicitacao.turno.id === turnoId && solicitacao.status === "pendente",

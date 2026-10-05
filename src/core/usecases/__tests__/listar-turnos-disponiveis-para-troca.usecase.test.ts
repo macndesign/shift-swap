@@ -38,9 +38,9 @@ describe("ListarTurnosDisponiveisParaTrocaUseCase", () => {
 
   it("não retorna solicitações que já não estão mais pendentes", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
-    const solicitacaoAceita = criarSolicitacao("func-b");
-    solicitacaoAceita.aceitar("func-c");
-    await solicitacaoRepository.save(solicitacaoAceita);
+    const solicitacaoAprovada = criarSolicitacao("func-b");
+    solicitacaoAprovada.aprovar({ supervisorId: "sup-1", destinatarioId: "func-c" });
+    await solicitacaoRepository.save(solicitacaoAprovada);
 
     const result = await useCase.execute({ funcionarioId: "func-a" });
 

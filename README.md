@@ -177,7 +177,7 @@ enquanto um `Supervisor` pode chamar `ListarTurnosUseCase` para ver tudo).
 | `FuncionarioEntity` | Pessoa que executa turnos e solicita trocas |
 | `SupervisorEntity` | Pessoa com visão de todos os turnos |
 | `Turno` | Um turno de trabalho (`data`, `horaInicio`, `horaFim`, dono atual) |
-| `SolicitacaoTrocaTurno`, `StatusSolicitacaoTrocaTurno` | Pedido de troca de um turno, com ciclo de vida `pendente` → `aceita`/`cancelada` |
+| `SolicitacaoTrocaTurno`, `StatusSolicitacaoTrocaTurno` | Pedido de troca de um turno, com ciclo de vida `pendente` → `aprovada`/`rejeitada`/`cancelada`/`expirada`; só o supervisor aprova ou rejeita |
 | `NameVO`, `EmailVO` | Value Objects usados internamente por `FuncionarioEntity`/`SupervisorEntity` |
 
 ### Ports (implemente com seu banco)
@@ -186,20 +186,22 @@ enquanto um `Supervisor` pode chamar `ListarTurnosUseCase` para ver tudo).
 | `FuncionarioRepository` | — |
 | `SupervisorRepository` | — |
 | `TurnoRepository` | `findByFuncionarioIdAndData(funcionarioId, data)` |
-| `SolicitacaoTrocaTurnoRepository` | `findPendentesByTurnoId(turnoId)`, `findPendentesExcetoSolicitante(solicitanteId)` |
+| `SolicitacaoTrocaTurnoRepository` | `findPendentes()`, `findPendentesByTurnoId(turnoId)`, `findPendentesExcetoSolicitante(solicitanteId)` |
 
 ### Use-cases
 | Funcionário | Supervisor | Turno | Troca de turno |
 | --- | --- | --- | --- |
 | `CriarFuncionarioUseCase` | `CriarSupervisorUseCase` | `CriarTurnoUseCase` | `SolicitarTrocaTurnoUseCase` |
-| `BuscarFuncionarioPorIdUseCase` | | `BuscarTurnoPorIdUseCase` | `AceitarTrocaTurnoUseCase` |
-| `ListarFuncionariosUseCase` | | `ListarTurnosUseCase` | `CancelarTrocaTurnoUseCase` |
-| `AtualizarFuncionarioUseCase` | | `AtualizarTurnoUseCase` | `BuscarSolicitacaoTrocaTurnoPorIdUseCase` |
-| `RemoverFuncionarioUseCase` | | `RemoverTurnoUseCase` | `ListarSolicitacoesTrocaTurnoUseCase` |
-| | | `ListarTurnosPorFuncionarioEDataUseCase` | `ListarTurnosDisponiveisParaTrocaUseCase` |
+| `BuscarFuncionarioPorIdUseCase` | | `BuscarTurnoPorIdUseCase` | `AprovarTrocaTurnoUseCase` |
+| `ListarFuncionariosUseCase` | | `ListarTurnosUseCase` | `RejeitarTrocaTurnoUseCase` |
+| `AtualizarFuncionarioUseCase` | | `AtualizarTurnoUseCase` | `CancelarTrocaTurnoUseCase` |
+| `RemoverFuncionarioUseCase` | | `RemoverTurnoUseCase` | `ExpirarSolicitacoesTrocaTurnoUseCase` |
+| | | `ListarTurnosPorFuncionarioEDataUseCase` | `BuscarSolicitacaoTrocaTurnoPorIdUseCase` |
+| | | | `ListarSolicitacoesTrocaTurnoUseCase` |
+| | | | `ListarTurnosDisponiveisParaTrocaUseCase` |
 
 > `SolicitacaoTrocaTurno` propositalmente não tem update/delete genérico — só
-> `create`/`read` e as transições de estado (`aceitar`/`cancelar`), para preservar o
+> `create`/`read` e as transições de estado (`aprovar`/`rejeitar`/`cancelar`/`expirar`), para preservar o
 > histórico da troca.
 
 ## Scripts (para desenvolver a própria lib)

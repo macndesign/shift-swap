@@ -10,18 +10,23 @@ Bun/Node. Ver [README.md](./README.md) para a perspectiva de quem consome a lib.
 
 ## Domínio (glossário)
 
-- **Funcionário**: pessoa que trabalha turnos e pode solicitar/aceitar trocas. Só vê os
+- **Funcionário**: pessoa que trabalha turnos e pode solicitar (e cancelar) trocas. Só vê os
   próprios turnos e a lista de turnos disponíveis para troca de outros.
-- **Supervisor**: pessoa com visão de todos os turnos de todos os funcionários. Mesma
+- **Supervisor**: pessoa com visão de todos os turnos de todos os funcionários e única
+  que aprova/rejeita solicitações de troca. Mesma
   base (`PessoaEntity`) que Funcionário, sem atributos extras hoje.
 - **Turno**: um turno de trabalho (`data`, `horaInicio`, `horaFim`) pertencente a um
   funcionário (`funcionarioId`). Pode ser reatribuído (`reatribuir`) quando uma troca é
-  aceita.
+  aprovada.
 - **Solicitação de troca de turno**: quando um funcionário quer que outro assuma um dos
-  seus turnos para ele poder folgar. Tem ciclo de vida `pendente → aceita | cancelada`.
+  seus turnos para ele poder folgar. Funcionários só *solicitam* (e podem cancelar); quem
+  decide é o **supervisor**, que também indica o destinatário ao aprovar. Ciclo de vida:
+  `pendente → aprovada | rejeitada | cancelada | expirada` (todos terminais).
+  `rejeitada` exige motivo; `expirada` é aplicada pelo sistema
+  (`ExpirarSolicitacoesTrocaTurnoUseCase`) quando o turno começa sem decisão.
   Modelada como entidade própria (não um campo em Turno) para manter histórico/auditoria
-  — por isso não tem update/delete genérico, só `create` + as transições `aceitar`/
-  `cancelar`.
+  (`decididoPorId`, `decididoEm`, `motivo`) — por isso não tem update/delete genérico, só
+  `create` + as transições `aprovar`/`rejeitar`/`cancelar`/`expirar`.
 
 ## Estrutura de pastas
 
@@ -66,7 +71,7 @@ kebab-case terminando no sufixo do tipo: `*.entity.ts`, `*.vo.ts`, `*.usecase.ts
   O `id` opcional existe para permitir reaproveitar um id externo (ex.: id de usuário
   autenticado via BetterAuth).
 - Mutação depois de criada é feita por métodos de instância que retornam `Result<void>`
-  (ex.: `Turno.reatribuir`, `Turno.atualizarHorario`, `SolicitacaoTrocaTurno.aceitar`),
+  (ex.: `Turno.reatribuir`, `Turno.atualizarHorario`, `SolicitacaoTrocaTurno.aprovar`),
   nunca alterando o estado direto de fora nem lançando exceção.
 - Quando duas operações (criar + atualizar, ou classe base + subclasse) compartilham
   validação, extraia um método privado/protegido estático (`buildProps`,
