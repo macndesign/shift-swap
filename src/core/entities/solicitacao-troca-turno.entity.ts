@@ -1,11 +1,13 @@
 import { Entity } from "../../shared/entity";
 import { Result } from "../../shared/result";
 import {
+  type AceitarSolicitacaoProps,
   type AprovarSolicitacaoProps,
   type ContextoSolicitacao,
   type EstadoSolicitacao,
   estadoDe,
   type MudancaSolicitacao,
+  type RecusarSolicitacaoProps,
   type RejeitarSolicitacaoProps,
   STATUS_SOLICITACAO,
   type StatusSolicitacaoTrocaTurno,
@@ -15,8 +17,9 @@ import type { Turno } from "./turno.entity";
 interface SolicitacaoTrocaTurnoProps {
   turno: Turno;
   solicitanteId: string;
-  destinatarioId?: string;
+  destinatarioId: string;
   status: StatusSolicitacaoTrocaTurno;
+  respondidaEm?: Date;
   decididoPorId?: string;
   decididoEm?: Date;
   motivo?: string;
@@ -25,6 +28,7 @@ interface SolicitacaoTrocaTurnoProps {
 interface CreateSolicitacaoTrocaTurnoProps {
   turno: Turno;
   solicitanteId: string;
+  destinatarioId: string;
 }
 
 type ReconstituirSolicitacaoTrocaTurnoProps = SolicitacaoTrocaTurnoProps;
@@ -42,12 +46,16 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
     return this.props.solicitanteId;
   }
 
-  get destinatarioId(): string | undefined {
+  get destinatarioId(): string {
     return this.props.destinatarioId;
   }
 
   get status(): StatusSolicitacaoTrocaTurno {
     return this.props.status;
+  }
+
+  get respondidaEm(): Date | undefined {
+    return this.props.respondidaEm;
   }
 
   get decididoPorId(): string | undefined {
@@ -62,10 +70,22 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
     return this.props.motivo;
   }
 
+  /** O destinatário topa a troca; passa a aguardar a autorização do supervisor. */
+  aceitar(props: AceitarSolicitacaoProps): Result<void> {
+    return this.estado.aceitar(this.contexto, props);
+  }
+
+  /** O destinatário não topa a troca; encerra a solicitação. */
+  recusar(props: RecusarSolicitacaoProps): Result<void> {
+    return this.estado.recusar(this.contexto, props);
+  }
+
+  /** O supervisor autoriza a troca já aceita e o turno muda de dono. */
   aprovar(props: AprovarSolicitacaoProps): Result<void> {
     return this.estado.aprovar(this.contexto, props);
   }
 
+  /** O supervisor não autoriza a troca já aceita. */
   rejeitar(props: RejeitarSolicitacaoProps): Result<void> {
     return this.estado.rejeitar(this.contexto, props);
   }
@@ -85,6 +105,7 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
   private get contexto(): ContextoSolicitacao {
     return {
       solicitanteId: this.props.solicitanteId,
+      destinatarioId: this.props.destinatarioId,
       turno: this.props.turno,
       aplicar: (mudanca) => this.aplicar(mudanca),
     };
@@ -92,8 +113,8 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
 
   private aplicar(mudanca: MudancaSolicitacao): void {
     this.props.status = mudanca.status;
-    if (mudanca.destinatarioId !== undefined) {
-      this.props.destinatarioId = mudanca.destinatarioId;
+    if (mudanca.respondida) {
+      this.props.respondidaEm = new Date();
     }
     if (mudanca.motivo !== undefined) {
       this.props.motivo = mudanca.motivo;
@@ -113,10 +134,23 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
         "Somente o funcionário dono do turno pode solicitar a troca",
       );
     }
+    if (!props.destinatarioId || props.destinatarioId.trim().length === 0) {
+      return Result.fail<SolicitacaoTrocaTurno>("Id do destinatário não pode ser vazio");
+    }
+    if (props.destinatarioId === props.solicitanteId) {
+      return Result.fail<SolicitacaoTrocaTurno>(
+        "O solicitante não pode ser o destinatário da própria solicitação",
+      );
+    }
 
     return Result.ok<SolicitacaoTrocaTurno>(
       new SolicitacaoTrocaTurno(
-        { turno: props.turno, solicitanteId: props.solicitanteId, status: "pendente" },
+        {
+          turno: props.turno,
+          solicitanteId: props.solicitanteId,
+          destinatarioId: props.destinatarioId,
+          status: "pendente",
+        },
         id,
       ),
     );
@@ -137,6 +171,9 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
     if (!props.solicitanteId || props.solicitanteId.trim().length === 0) {
       return Result.fail<SolicitacaoTrocaTurno>("Id do solicitante não pode ser vazio");
     }
+    if (!props.destinatarioId || props.destinatarioId.trim().length === 0) {
+      return Result.fail<SolicitacaoTrocaTurno>("Id do destinatário não pode ser vazio");
+    }
     if (!STATUS_SOLICITACAO.includes(props.status)) {
       return Result.fail<SolicitacaoTrocaTurno>(`Status inválido: ${props.status}`);
     }
@@ -150,23 +187,56 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
   }
 
   private static validarCoerencia(props: SolicitacaoTrocaTurnoProps): Result<void> {
-    const temDecisao = Boolean(props.decididoPorId && props.decididoEm);
+    const temSupervisor = Boolean(props.decididoPorId || props.decididoEm);
+    const temDecisaoCompleta = Boolean(props.decididoPorId && props.decididoEm);
+    const temDadosDeDecisao = temSupervisor || Boolean(props.motivo);
 
-    if (props.status === "aprovada" && !(props.destinatarioId && temDecisao)) {
-      return Result.fail<void>(
-        "Solicitação aprovada exige destinatário, supervisor e data da decisão",
-      );
-    }
-    if (props.status === "rejeitada" && !(temDecisao && props.motivo)) {
-      return Result.fail<void>("Solicitação rejeitada exige supervisor, data da decisão e motivo");
-    }
-
-    const semDecisao = ["pendente", "cancelada", "expirada"].includes(props.status);
-    if (
-      semDecisao &&
-      (props.decididoPorId || props.decididoEm || props.motivo || props.destinatarioId)
-    ) {
-      return Result.fail<void>(`Solicitação ${props.status} não pode ter dados de decisão`);
+    switch (props.status) {
+      case "pendente":
+        if (props.respondidaEm || temDadosDeDecisao) {
+          return Result.fail<void>(
+            "Solicitação pendente não pode ter dados de resposta ou decisão",
+          );
+        }
+        break;
+      case "aguardando_aprovacao":
+        if (!props.respondidaEm) {
+          return Result.fail<void>(
+            "Solicitação aguardando aprovação exige a data da resposta do destinatário",
+          );
+        }
+        if (temDadosDeDecisao) {
+          return Result.fail<void>(
+            "Solicitação aguardando aprovação não pode ter dados de decisão",
+          );
+        }
+        break;
+      case "aprovada":
+        if (!temDecisaoCompleta) {
+          return Result.fail<void>("Solicitação aprovada exige supervisor e data da decisão");
+        }
+        break;
+      case "rejeitada":
+        if (!(temDecisaoCompleta && props.motivo)) {
+          return Result.fail<void>(
+            "Solicitação rejeitada exige supervisor, data da decisão e motivo",
+          );
+        }
+        break;
+      case "recusada":
+        if (!props.respondidaEm) {
+          return Result.fail<void>("Solicitação recusada exige a data da resposta do destinatário");
+        }
+        if (temSupervisor) {
+          return Result.fail<void>("Solicitação recusada não pode ter dados de decisão");
+        }
+        break;
+      case "cancelada":
+      case "expirada":
+        if (temDadosDeDecisao) {
+          return Result.fail<void>(`Solicitação ${props.status} não pode ter dados de decisão`);
+        }
+        break;
     }
 
     return Result.ok<void>();

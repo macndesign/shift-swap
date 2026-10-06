@@ -1,6 +1,10 @@
 import type { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { SolicitacaoTrocaTurnoRepository } from "../../ports/solicitacao-troca-turno.repository";
 
+function emAberto(solicitacao: SolicitacaoTrocaTurno): boolean {
+  return solicitacao.status === "pendente" || solicitacao.status === "aguardando_aprovacao";
+}
+
 class SolicitacaoTrocaTurnoInMemoryRepository extends SolicitacaoTrocaTurnoRepository {
   private readonly items = new Map<string, SolicitacaoTrocaTurno>();
 
@@ -24,22 +28,20 @@ class SolicitacaoTrocaTurnoInMemoryRepository extends SolicitacaoTrocaTurnoRepos
     return Array.from(this.items.values());
   }
 
-  async findPendentes(): Promise<SolicitacaoTrocaTurno[]> {
+  async findEmAberto(): Promise<SolicitacaoTrocaTurno[]> {
+    return Array.from(this.items.values()).filter(emAberto);
+  }
+
+  async findEmAbertoByTurnoId(turnoId: string): Promise<SolicitacaoTrocaTurno[]> {
     return Array.from(this.items.values()).filter(
-      (solicitacao) => solicitacao.status === "pendente",
+      (solicitacao) => solicitacao.turno.id === turnoId && emAberto(solicitacao),
     );
   }
 
-  async findPendentesByTurnoId(turnoId: string): Promise<SolicitacaoTrocaTurno[]> {
-    return Array.from(this.items.values()).filter(
-      (solicitacao) => solicitacao.turno.id === turnoId && solicitacao.status === "pendente",
-    );
-  }
-
-  async findPendentesExcetoSolicitante(solicitanteId: string): Promise<SolicitacaoTrocaTurno[]> {
+  async findPendentesByDestinatarioId(destinatarioId: string): Promise<SolicitacaoTrocaTurno[]> {
     return Array.from(this.items.values()).filter(
       (solicitacao) =>
-        solicitacao.status === "pendente" && solicitacao.solicitanteId !== solicitanteId,
+        solicitacao.status === "pendente" && solicitacao.destinatarioId === destinatarioId,
     );
   }
 }

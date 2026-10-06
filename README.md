@@ -177,7 +177,7 @@ enquanto um `Supervisor` pode chamar `ListarTurnosUseCase` para ver tudo).
 | `FuncionarioEntity` | Pessoa que executa turnos e solicita trocas |
 | `SupervisorEntity` | Pessoa com visão de todos os turnos |
 | `Turno` | Um turno de trabalho (`data`, `horaInicio`, `horaFim`, dono atual) |
-| `SolicitacaoTrocaTurno`, `StatusSolicitacaoTrocaTurno` | Pedido de troca de um turno, com ciclo de vida `pendente` → `aprovada`/`rejeitada`/`cancelada`/`expirada`; só o supervisor aprova ou rejeita |
+| `SolicitacaoTrocaTurno`, `StatusSolicitacaoTrocaTurno` | Pedido de troca de um turno **direcionado a um colega**. O destinatário aceita ou recusa; se aceitar, o supervisor autoriza ou não. Ciclo de vida: `pendente` → `aguardando_aprovacao` → `aprovada`/`rejeitada`; ou `pendente` → `recusada`; `cancelada` e `expirada` valem enquanto em aberto |
 | `NameVO`, `EmailVO` | Value Objects usados internamente por `FuncionarioEntity`/`SupervisorEntity` |
 
 ### Ports (implemente com seu banco)
@@ -186,22 +186,24 @@ enquanto um `Supervisor` pode chamar `ListarTurnosUseCase` para ver tudo).
 | `FuncionarioRepository` | — |
 | `SupervisorRepository` | — |
 | `TurnoRepository` | `findByFuncionarioIdAndData(funcionarioId, data)` |
-| `SolicitacaoTrocaTurnoRepository` | `findPendentes()`, `findPendentesByTurnoId(turnoId)`, `findPendentesExcetoSolicitante(solicitanteId)` |
+| `SolicitacaoTrocaTurnoRepository` | `findEmAberto()`, `findEmAbertoByTurnoId(turnoId)`, `findPendentesByDestinatarioId(destinatarioId)` |
 
 ### Use-cases
 | Funcionário | Supervisor | Turno | Troca de turno |
 | --- | --- | --- | --- |
 | `CriarFuncionarioUseCase` | `CriarSupervisorUseCase` | `CriarTurnoUseCase` | `SolicitarTrocaTurnoUseCase` |
-| `BuscarFuncionarioPorIdUseCase` | | `BuscarTurnoPorIdUseCase` | `AprovarTrocaTurnoUseCase` |
-| `ListarFuncionariosUseCase` | | `ListarTurnosUseCase` | `RejeitarTrocaTurnoUseCase` |
-| `AtualizarFuncionarioUseCase` | | `AtualizarTurnoUseCase` | `CancelarTrocaTurnoUseCase` |
-| `RemoverFuncionarioUseCase` | | `RemoverTurnoUseCase` | `ExpirarSolicitacoesTrocaTurnoUseCase` |
-| | | `ListarTurnosPorFuncionarioEDataUseCase` | `BuscarSolicitacaoTrocaTurnoPorIdUseCase` |
+| `BuscarFuncionarioPorIdUseCase` | | `BuscarTurnoPorIdUseCase` | `AceitarTrocaTurnoUseCase` |
+| `ListarFuncionariosUseCase` | | `ListarTurnosUseCase` | `RecusarTrocaTurnoUseCase` |
+| `AtualizarFuncionarioUseCase` | | `AtualizarTurnoUseCase` | `AprovarTrocaTurnoUseCase` |
+| `RemoverFuncionarioUseCase` | | `RemoverTurnoUseCase` | `RejeitarTrocaTurnoUseCase` |
+| | | `ListarTurnosPorFuncionarioEDataUseCase` | `CancelarTrocaTurnoUseCase` |
+| | | | `ExpirarSolicitacoesTrocaTurnoUseCase` |
+| | | | `BuscarSolicitacaoTrocaTurnoPorIdUseCase` |
 | | | | `ListarSolicitacoesTrocaTurnoUseCase` |
-| | | | `ListarTurnosDisponiveisParaTrocaUseCase` |
+| | | | `ListarSolicitacoesRecebidasTrocaTurnoUseCase` |
 
 > `SolicitacaoTrocaTurno` propositalmente não tem update/delete genérico — só
-> `create`/`read` e as transições de estado (`aprovar`/`rejeitar`/`cancelar`/`expirar`), para preservar o
+> `create`/`read` e as transições de estado (`aceitar`/`recusar`/`aprovar`/`rejeitar`/`cancelar`/`expirar`), para preservar o
 > histórico da troca.
 >
 > Para **reidratar** uma solicitação já persistida (nos adapters de repositório), use

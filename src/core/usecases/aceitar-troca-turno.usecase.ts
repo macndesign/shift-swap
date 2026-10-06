@@ -2,41 +2,34 @@ import { Result } from "../../shared/result";
 import { UseCase } from "../../shared/use-case";
 import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
 import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
-import type { SupervisorRepository } from "../ports/supervisor.repository";
 import type { TurnoRepository } from "../ports/turno.repository";
 import { temConflitoDeHorario } from "./conflito-horario";
 
-interface AprovarTrocaTurnoInput {
+interface AceitarTrocaTurnoInput {
   solicitacaoId: string;
-  supervisorId: string;
+  funcionarioId: string;
 }
 
-/** O supervisor autoriza uma troca que o destinatário já aceitou; o turno muda de dono. */
-class AprovarTrocaTurnoUseCase extends UseCase<AprovarTrocaTurnoInput, SolicitacaoTrocaTurno> {
+/** O destinatário (funcionário B) aceita a troca; a solicitação passa a aguardar o supervisor. */
+class AceitarTrocaTurnoUseCase extends UseCase<AceitarTrocaTurnoInput, SolicitacaoTrocaTurno> {
   constructor(
-    private readonly supervisorRepository: SupervisorRepository,
     private readonly turnoRepository: TurnoRepository,
     private readonly solicitacaoRepository: SolicitacaoTrocaTurnoRepository,
   ) {
     super();
   }
 
-  async execute(input: AprovarTrocaTurnoInput): Promise<Result<SolicitacaoTrocaTurno>> {
-    const supervisor = await this.supervisorRepository.findById(input.supervisorId);
-    if (!supervisor) {
-      return Result.fail<SolicitacaoTrocaTurno>("Supervisor não encontrado");
-    }
-
+  async execute(input: AceitarTrocaTurnoInput): Promise<Result<SolicitacaoTrocaTurno>> {
     const solicitacao = await this.solicitacaoRepository.findById(input.solicitacaoId);
     if (!solicitacao) {
       return Result.fail<SolicitacaoTrocaTurno>("Solicitação não encontrada");
     }
 
-    // A agenda do destinatário pode ter mudado desde o aceite, então confere de novo.
-    // Em outros estados, a entidade devolve o erro de transição inválida.
-    if (solicitacao.status === "aguardando_aprovacao") {
+    // Só vale checar o conflito de quem de fato pode aceitar; para os demais, a entidade
+    // devolve o erro certo (outro destinatário, estado inválido).
+    if (input.funcionarioId === solicitacao.destinatarioId && solicitacao.status === "pendente") {
       const turnosDoDestinatario = await this.turnoRepository.findByFuncionarioIdAndData(
-        solicitacao.destinatarioId,
+        input.funcionarioId,
         solicitacao.turno.data,
       );
       if (temConflitoDeHorario(turnosDoDestinatario, solicitacao.turno)) {
@@ -44,16 +37,15 @@ class AprovarTrocaTurnoUseCase extends UseCase<AprovarTrocaTurnoInput, Solicitac
       }
     }
 
-    const aprovarOrError = solicitacao.aprovar({ supervisorId: input.supervisorId });
-    if (aprovarOrError.isFailure) {
-      return Result.fail<SolicitacaoTrocaTurno>(aprovarOrError.error as string | Error);
+    const aceitarOrError = solicitacao.aceitar({ funcionarioId: input.funcionarioId });
+    if (aceitarOrError.isFailure) {
+      return Result.fail<SolicitacaoTrocaTurno>(aceitarOrError.error as string | Error);
     }
 
-    await this.turnoRepository.update(solicitacao.turno);
     await this.solicitacaoRepository.update(solicitacao);
 
     return Result.ok<SolicitacaoTrocaTurno>(solicitacao);
   }
 }
 
-export { AprovarTrocaTurnoUseCase };
+export { AceitarTrocaTurnoUseCase };

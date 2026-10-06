@@ -4,15 +4,19 @@ import { Turno } from "../../entities/turno.entity";
 import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
 import { ExpirarSolicitacoesTrocaTurnoUseCase } from "../expirar-solicitacoes-troca-turno.usecase";
 
-function criarSolicitacao(data: string, horaInicio = "08:00", solicitanteId = "func-a") {
+function criarSolicitacao(data: string, horaInicio = "08:00") {
   const turno = Turno.create({
     data,
     horaInicio,
     horaFim: "18:00",
-    funcionarioId: solicitanteId,
+    funcionarioId: "func-a",
   }).getValue();
 
-  return SolicitacaoTrocaTurno.create({ turno, solicitanteId }).getValue();
+  return SolicitacaoTrocaTurno.create({
+    turno,
+    solicitanteId: "func-a",
+    destinatarioId: "func-b",
+  }).getValue();
 }
 
 function criarSut() {
@@ -38,6 +42,19 @@ describe("ExpirarSolicitacoesTrocaTurnoUseCase", () => {
     expect(futura.status).toBe("pendente");
   });
 
+  it("expira também as que já foram aceitas e ainda aguardam aprovação", async () => {
+    const { solicitacaoRepository, useCase } = criarSut();
+    const aguardando = criarSolicitacao("2026-09-24", "08:00");
+    aguardando.aceitar({ funcionarioId: "func-b" });
+    await solicitacaoRepository.save(aguardando);
+
+    const result = await useCase.execute({ referencia: "2026-09-24T09:00" });
+
+    expect(result.getValue()).toEqual([aguardando]);
+    expect(aguardando.status).toBe("expirada");
+    expect(aguardando.turno.funcionarioId).toBe("func-a");
+  });
+
   it("expira quando o turno começa exatamente na referência", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao("2026-09-24", "08:00");
@@ -48,16 +65,20 @@ describe("ExpirarSolicitacoesTrocaTurnoUseCase", () => {
     expect(result.getValue()).toEqual([solicitacao]);
   });
 
-  it("não altera solicitações que já foram decididas", async () => {
+  it("não altera solicitações que já foram encerradas", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const cancelada = criarSolicitacao("2026-09-20");
     cancelada.cancelar();
+    const recusada = criarSolicitacao("2026-09-20");
+    recusada.recusar({ funcionarioId: "func-b" });
     await solicitacaoRepository.save(cancelada);
+    await solicitacaoRepository.save(recusada);
 
     const result = await useCase.execute({ referencia: "2026-09-24T09:00" });
 
     expect(result.getValue()).toEqual([]);
     expect(cancelada.status).toBe("cancelada");
+    expect(recusada.status).toBe("recusada");
   });
 
   it("falha quando a referência tem formato inválido", async () => {

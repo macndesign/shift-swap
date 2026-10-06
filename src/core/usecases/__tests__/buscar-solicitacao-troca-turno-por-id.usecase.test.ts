@@ -20,7 +20,11 @@ describe("BuscarSolicitacaoTrocaTurnoPorIdUseCase", () => {
       horaFim: "12:00",
       funcionarioId: "func-a",
     }).getValue();
-    const solicitacao = SolicitacaoTrocaTurno.create({ turno, solicitanteId: "func-a" }).getValue();
+    const solicitacao = SolicitacaoTrocaTurno.create({
+      turno,
+      solicitanteId: "func-a",
+      destinatarioId: "func-b",
+    }).getValue();
     await solicitacaoRepository.save(solicitacao);
 
     const result = await useCase.execute({ id: solicitacao.id });
