@@ -6,15 +6,20 @@ import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitaca
 import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository";
 import { RejeitarTrocaTurnoUseCase } from "../rejeitar-troca-turno.usecase";
 
-function criarSolicitacao(solicitanteId = "func-a") {
+function criarSolicitacaoAceita() {
   const turno = Turno.create({
     data: "2026-09-24",
     horaInicio: "08:00",
     horaFim: "12:00",
-    funcionarioId: solicitanteId,
+    funcionarioId: "func-a",
   }).getValue();
-
-  return SolicitacaoTrocaTurno.create({ turno, solicitanteId }).getValue();
+  const solicitacao = SolicitacaoTrocaTurno.create({
+    turno,
+    solicitanteId: "func-a",
+    destinatarioId: "func-b",
+  }).getValue();
+  solicitacao.aceitar({ funcionarioId: "func-b" });
+  return solicitacao;
 }
 
 function criarSupervisor() {
@@ -33,11 +38,11 @@ function criarSut() {
 }
 
 describe("RejeitarTrocaTurnoUseCase", () => {
-  it("rejeita a solicitação pendente registrando o motivo", async () => {
+  it("rejeita a solicitação aceita registrando o motivo", async () => {
     const { supervisorRepository, solicitacaoRepository, useCase } = criarSut();
     const supervisor = criarSupervisor();
     await supervisorRepository.save(supervisor);
-    const solicitacao = criarSolicitacao();
+    const solicitacao = criarSolicitacaoAceita();
     await solicitacaoRepository.save(solicitacao);
 
     const result = await useCase.execute({
@@ -50,16 +55,17 @@ describe("RejeitarTrocaTurnoUseCase", () => {
     expect(result.getValue().status).toBe("rejeitada");
     expect(result.getValue().motivo).toBe("Equipe reduzida");
     expect(result.getValue().decididoPorId).toBe(supervisor.id);
+    expect(solicitacao.turno.funcionarioId).toBe("func-a");
   });
 
   it("falha quando quem rejeita não é um supervisor", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
-    const solicitacao = criarSolicitacao();
+    const solicitacao = criarSolicitacaoAceita();
     await solicitacaoRepository.save(solicitacao);
 
     const result = await useCase.execute({
       solicitacaoId: solicitacao.id,
-      supervisorId: "func-b",
+      supervisorId: "func-c",
       motivo: "Equipe reduzida",
     });
 
@@ -86,7 +92,7 @@ describe("RejeitarTrocaTurnoUseCase", () => {
     const { supervisorRepository, solicitacaoRepository, useCase } = criarSut();
     const supervisor = criarSupervisor();
     await supervisorRepository.save(supervisor);
-    const solicitacao = criarSolicitacao();
+    const solicitacao = criarSolicitacaoAceita();
     await solicitacaoRepository.save(solicitacao);
 
     const result = await useCase.execute({
@@ -99,11 +105,37 @@ describe("RejeitarTrocaTurnoUseCase", () => {
     expect(result.error).toBe("Motivo da rejeição não pode ser vazio");
   });
 
-  it("falha quando a solicitação já não está mais pendente", async () => {
+  it("falha quando o destinatário ainda não aceitou", async () => {
     const { supervisorRepository, solicitacaoRepository, useCase } = criarSut();
     const supervisor = criarSupervisor();
     await supervisorRepository.save(supervisor);
-    const solicitacao = criarSolicitacao();
+    const solicitacao = SolicitacaoTrocaTurno.create({
+      turno: Turno.create({
+        data: "2026-09-24",
+        horaInicio: "08:00",
+        horaFim: "12:00",
+        funcionarioId: "func-a",
+      }).getValue(),
+      solicitanteId: "func-a",
+      destinatarioId: "func-b",
+    }).getValue();
+    await solicitacaoRepository.save(solicitacao);
+
+    const result = await useCase.execute({
+      solicitacaoId: solicitacao.id,
+      supervisorId: supervisor.id,
+      motivo: "Equipe reduzida",
+    });
+
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toBe("Não é possível rejeitar uma solicitação pendente");
+  });
+
+  it("falha quando a solicitação já foi cancelada", async () => {
+    const { supervisorRepository, solicitacaoRepository, useCase } = criarSut();
+    const supervisor = criarSupervisor();
+    await supervisorRepository.save(supervisor);
+    const solicitacao = criarSolicitacaoAceita();
     await solicitacaoRepository.save(solicitacao);
     solicitacao.cancelar();
 
@@ -114,6 +146,6 @@ describe("RejeitarTrocaTurnoUseCase", () => {
     });
 
     expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Solicitação de troca não está mais pendente");
+    expect(result.error).toBe("Não é possível rejeitar uma solicitação cancelada");
   });
 });

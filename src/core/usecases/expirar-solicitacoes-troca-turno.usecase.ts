@@ -25,10 +25,10 @@ class ExpirarSolicitacoesTrocaTurnoUseCase extends UseCase<
       return Result.fail<SolicitacaoTrocaTurno[]>(`Referência inválida: ${input.referencia}`);
     }
 
-    const pendentes = await this.solicitacaoRepository.findPendentes();
+    const emAberto = await this.solicitacaoRepository.findEmAberto();
     const expiradas: SolicitacaoTrocaTurno[] = [];
 
-    for (const solicitacao of pendentes) {
+    for (const solicitacao of emAberto) {
       const inicioDoTurno = `${solicitacao.turno.data}T${solicitacao.turno.horaInicio}`;
       if (inicioDoTurno > input.referencia) {
         continue;

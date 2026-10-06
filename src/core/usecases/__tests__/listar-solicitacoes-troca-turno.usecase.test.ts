@@ -35,10 +35,12 @@ describe("ListarSolicitacoesTrocaTurnoUseCase", () => {
     const solicitacaoA = SolicitacaoTrocaTurno.create({
       turno: criarTurno("func-a"),
       solicitanteId: "func-a",
+      destinatarioId: "func-c",
     }).getValue();
     const solicitacaoB = SolicitacaoTrocaTurno.create({
       turno: criarTurno("func-b"),
       solicitanteId: "func-b",
+      destinatarioId: "func-c",
     }).getValue();
     await solicitacaoRepository.save(solicitacaoA);
     await solicitacaoRepository.save(solicitacaoB);

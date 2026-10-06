@@ -2,58 +2,59 @@ import { describe, expect, it } from "bun:test";
 import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { Turno } from "../../entities/turno.entity";
 import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
-import { CancelarTrocaTurnoUseCase } from "../cancelar-troca-turno.usecase";
+import { RecusarTrocaTurnoUseCase } from "../recusar-troca-turno.usecase";
 
-function criarSolicitacao(solicitanteId = "func-a") {
+function criarSolicitacao() {
   const turno = Turno.create({
     data: "2026-09-24",
     horaInicio: "08:00",
     horaFim: "12:00",
-    funcionarioId: solicitanteId,
+    funcionarioId: "func-a",
   }).getValue();
 
   return SolicitacaoTrocaTurno.create({
     turno,
-    solicitanteId,
+    solicitanteId: "func-a",
     destinatarioId: "func-b",
   }).getValue();
 }
 
 function criarSut() {
   const solicitacaoRepository = new SolicitacaoTrocaTurnoInMemoryRepository();
-  const useCase = new CancelarTrocaTurnoUseCase(solicitacaoRepository);
+  const useCase = new RecusarTrocaTurnoUseCase(solicitacaoRepository);
 
   return { solicitacaoRepository, useCase };
 }
 
-describe("CancelarTrocaTurnoUseCase", () => {
-  it("cancela uma solicitação pendente quando quem cancela é o solicitante", async () => {
+describe("RecusarTrocaTurnoUseCase", () => {
+  it("recusa a solicitação pendente e mantém o turno com o solicitante", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
-    const solicitacao = criarSolicitacao("func-a");
+    const solicitacao = criarSolicitacao();
     await solicitacaoRepository.save(solicitacao);
 
     const result = await useCase.execute({
       solicitacaoId: solicitacao.id,
-      solicitanteId: "func-a",
+      funcionarioId: "func-b",
     });
 
     expect(result.isSuccess).toBe(true);
-    expect(result.getValue().status).toBe("cancelada");
+    expect(result.getValue().status).toBe("recusada");
+    expect(result.getValue().respondidaEm).toBeInstanceOf(Date);
+    expect(solicitacao.turno.funcionarioId).toBe("func-a");
   });
 
-  it("cancela uma solicitação que o destinatário já aceitou e aguarda aprovação", async () => {
+  it("guarda o motivo quando informado", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
-    const solicitacao = criarSolicitacao("func-a");
+    const solicitacao = criarSolicitacao();
     await solicitacaoRepository.save(solicitacao);
-    solicitacao.aceitar({ funcionarioId: "func-b" });
 
     const result = await useCase.execute({
       solicitacaoId: solicitacao.id,
-      solicitanteId: "func-a",
+      funcionarioId: "func-b",
+      motivo: "Tenho consulta",
     });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue().status).toBe("cancelada");
+    expect(result.getValue().motivo).toBe("Tenho consulta");
   });
 
   it("falha quando a solicitação não existe", async () => {
@@ -61,39 +62,39 @@ describe("CancelarTrocaTurnoUseCase", () => {
 
     const result = await useCase.execute({
       solicitacaoId: "solicitacao-inexistente",
-      solicitanteId: "func-a",
+      funcionarioId: "func-b",
     });
 
     expect(result.isFailure).toBe(true);
     expect(result.error).toBe("Solicitação não encontrada");
   });
 
-  it("falha quando quem tenta cancelar não é o solicitante", async () => {
+  it("falha quando quem recusa não é o destinatário", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
-    const solicitacao = criarSolicitacao("func-a");
+    const solicitacao = criarSolicitacao();
     await solicitacaoRepository.save(solicitacao);
 
     const result = await useCase.execute({
       solicitacaoId: solicitacao.id,
-      solicitanteId: "func-b",
+      funcionarioId: "func-c",
     });
 
     expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Somente o solicitante pode cancelar a solicitação");
+    expect(result.error).toBe("Somente o destinatário pode recusar a solicitação");
   });
 
-  it("falha quando a solicitação já foi cancelada", async () => {
+  it("falha quando o destinatário já aceitou", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
-    const solicitacao = criarSolicitacao("func-a");
+    const solicitacao = criarSolicitacao();
     await solicitacaoRepository.save(solicitacao);
-    solicitacao.cancelar();
+    solicitacao.aceitar({ funcionarioId: "func-b" });
 
     const result = await useCase.execute({
       solicitacaoId: solicitacao.id,
-      solicitanteId: "func-a",
+      funcionarioId: "func-b",
     });
 
     expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Não é possível cancelar uma solicitação cancelada");
+    expect(result.error).toBe("Não é possível recusar uma solicitação aguardando aprovação");
   });
 });

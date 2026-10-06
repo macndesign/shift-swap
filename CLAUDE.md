@@ -10,23 +10,30 @@ Bun/Node. Ver [README.md](./README.md) para a perspectiva de quem consome a lib.
 
 ## Domínio (glossário)
 
-- **Funcionário**: pessoa que trabalha turnos e pode solicitar (e cancelar) trocas. Só vê os
-  próprios turnos e a lista de turnos disponíveis para troca de outros.
+- **Funcionário**: pessoa que trabalha turnos e pode solicitar (e cancelar) trocas e responder
+  (aceitar/recusar) as que colegas pedem a ele. Só vê os próprios turnos e os pedidos
+  endereçados a ele.
 - **Supervisor**: pessoa com visão de todos os turnos de todos os funcionários e única
   que aprova/rejeita solicitações de troca. Mesma
   base (`PessoaEntity`) que Funcionário, sem atributos extras hoje.
 - **Turno**: um turno de trabalho (`data`, `horaInicio`, `horaFim`) pertencente a um
   funcionário (`funcionarioId`). Pode ser reatribuído (`reatribuir`) quando uma troca é
   aprovada.
-- **Solicitação de troca de turno**: quando um funcionário quer que outro assuma um dos
-  seus turnos para ele poder folgar. Funcionários só *solicitam* (e podem cancelar); quem
-  decide é o **supervisor**, que também indica o destinatário ao aprovar. Ciclo de vida:
-  `pendente → aprovada | rejeitada | cancelada | expirada` (todos terminais).
-  `rejeitada` exige motivo; `expirada` é aplicada pelo sistema
-  (`ExpirarSolicitacoesTrocaTurnoUseCase`) quando o turno começa sem decisão.
+- **Solicitação de troca de turno**: quando o funcionário A pede que o colega B (o
+  **destinatário**, indicado por A ao solicitar) assuma um dos seus turnos. É um acordo em
+  duas etapas: primeiro B aceita ou recusa; só depois do aceite o **supervisor** autoriza
+  ou não. Ciclo de vida:
+  `pendente → aguardando_aprovacao → aprovada | rejeitada` e `pendente → recusada`;
+  `cancelada` (A desiste) e `expirada` (o turno começou sem desfecho, aplicada pelo
+  sistema via `ExpirarSolicitacoesTrocaTurnoUseCase`) valem em `pendente` e
+  `aguardando_aprovacao`. Todos os demais são terminais. `rejeitada` exige motivo;
+  `recusada` aceita motivo opcional. O turno só muda de dono na aprovação.
+  Cada estado é uma classe em `solicitacao-troca-turno.state.ts` (padrão State) e a
+  entidade só delega.
   Modelada como entidade própria (não um campo em Turno) para manter histórico/auditoria
-  (`decididoPorId`, `decididoEm`, `motivo`) — por isso não tem update/delete genérico, só
-  `create` + as transições `aprovar`/`rejeitar`/`cancelar`/`expirar`.
+  (`respondidaEm`, `decididoPorId`, `decididoEm`, `motivo`) — por isso não tem update/delete genérico, só
+  `create` + as transições `aceitar`/`recusar` (destinatário), `aprovar`/`rejeitar`
+  (supervisor), `cancelar` e `expirar`.
   `reconstituir(props, id)` existe só para adapters de repositório reidratarem uma
   solicitação salva (sem rodar transições).
 
@@ -95,7 +102,7 @@ Estendem `ValueObject<T>`, mesmo padrão `static create(): Result<T>`, imutávei
 ### Ports / Repositórios
 - Abstract class em `core/ports/`, estendendo `Repository<T>` genérico.
 - Só adicione um método de query dedicado quando um use-case real precisar dele (ex.:
-  `findByFuncionarioIdAndData`, `findPendentesExcetoSolicitante`). Não adicione métodos
+  `findByFuncionarioIdAndData`, `findPendentesByDestinatarioId`). Não adicione métodos
   especulativos.
 
 ### Testes
