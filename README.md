@@ -202,6 +202,10 @@ enquanto um `Supervisor` pode chamar `ListarTurnosUseCase` para ver tudo).
 | | | | `ListarSolicitacoesTrocaTurnoUseCase` |
 | | | | `ListarSolicitacoesRecebidasTrocaTurnoUseCase` |
 
+> Criar, atualizar e remover turno são exclusivos do supervisor: `CriarTurnoUseCase`,
+> `AtualizarTurnoUseCase` e `RemoverTurnoUseCase` recebem o `SupervisorRepository` no
+> construtor e `supervisorId` no input.
+
 > `SolicitacaoTrocaTurno` propositalmente não tem update/delete genérico — só
 > `create`/`read` e as transições de estado (`aceitar`/`recusar`/`aprovar`/`rejeitar`/`cancelar`/`expirar`), para preservar o
 > histórico da troca.

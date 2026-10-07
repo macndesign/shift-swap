@@ -14,7 +14,9 @@ Bun/Node. Ver [README.md](./README.md) para a perspectiva de quem consome a lib.
   (aceitar/recusar) as que colegas pedem a ele. Só vê os próprios turnos e os pedidos
   endereçados a ele.
 - **Supervisor**: pessoa com visão de todos os turnos de todos os funcionários e única
-  que aprova/rejeita solicitações de troca. Mesma
+  que cria/altera/exclui turnos (`CriarTurnoUseCase`, `AtualizarTurnoUseCase`,
+  `RemoverTurnoUseCase` exigem `supervisorId` e falham com "Supervisor não encontrado") e
+  aprova/rejeita solicitações de troca. Mesma
   base (`PessoaEntity`) que Funcionário, sem atributos extras hoje.
 - **Turno**: um turno de trabalho (`data`, `horaInicio`, `horaFim`) pertencente a um
   funcionário (`funcionarioId`). Pode ser reatribuído (`reatribuir`) quando uma troca é
