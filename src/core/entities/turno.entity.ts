@@ -23,7 +23,19 @@ interface CriarTurnoProps extends HorarioTurno {
   funcionarioId: string;
 }
 
-const DATA_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const DATA_REGEX = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+const ehBissexto = (ano: number) => ano % 4 === 0 && (ano % 100 !== 0 || ano % 400 === 0);
+
+/** Formato `YYYY-MM-DD` **e** dia existente no calendário (rejeita `2026-13-01`, `2026-02-30`). */
+function dataValida(data: string): boolean {
+  const partes = DATA_REGEX.exec(data);
+  if (!partes) return false;
+  const [ano, mes, dia] = partes.slice(1).map(Number) as [number, number, number];
+  if (mes < 1 || mes > 12 || dia < 1) return false;
+  const diasNoMes = [31, ehBissexto(ano) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return dia <= (diasNoMes[mes - 1] ?? 0);
+}
 const HORA_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const invalido = (field: string, code: string, message: string) =>
@@ -75,7 +87,7 @@ class Turno extends Entity<TurnoProps, TurnoId> {
 
   /** Para na primeira regra violada, na ordem: data, início, fim, fim depois do início. */
   private static validarHorario(horario: HorarioTurno): Result<void, ValidationError> {
-    if (!DATA_REGEX.test(horario.data)) {
+    if (!dataValida(horario.data)) {
       return invalido("data", CODIGOS_ERRO.DATA_INVALIDA, `Data inválida: ${horario.data}`);
     }
     if (!HORA_REGEX.test(horario.horaInicio)) {
