@@ -6,7 +6,7 @@ import {
   Result,
   type ValidationError,
 } from "core-kernel";
-import { FuncionarioId, idDoCampo, TurnoId } from "../entities/ids";
+import { FuncionarioId, opcoesDeId, TurnoId } from "../entities/ids";
 import { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
 import { CODIGOS_ERRO, naoEncontrado } from "../erros";
 import type { FuncionarioRepository } from "../ports/funcionario.repository";
@@ -41,9 +41,9 @@ class SolicitarTrocaTurnoUseCase extends BaseUseCase<
     input: SolicitarTrocaTurnoInput,
   ): Promise<Result<SolicitacaoTrocaTurno, Erro>> {
     const ids = Result.combine([
-      idDoCampo(TurnoId.from(input.turnoId), "turnoId"),
-      idDoCampo(FuncionarioId.from(input.solicitanteId), "solicitanteId"),
-      idDoCampo(FuncionarioId.from(input.destinatarioId), "destinatarioId"),
+      TurnoId.from(input.turnoId, opcoesDeId("turnoId")),
+      FuncionarioId.from(input.solicitanteId, opcoesDeId("solicitanteId")),
+      FuncionarioId.from(input.destinatarioId, opcoesDeId("destinatarioId")),
     ]);
     if (ids.isFail()) return ids;
     const [turnoId, solicitanteId, destinatarioId] = ids.value;

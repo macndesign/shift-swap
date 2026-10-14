@@ -5,7 +5,7 @@ import {
   Result,
   type ValidationError,
 } from "core-kernel";
-import { FuncionarioId, idDoCampo, SolicitacaoTrocaTurnoId } from "../entities/ids";
+import { FuncionarioId, opcoesDeId, SolicitacaoTrocaTurnoId } from "../entities/ids";
 import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
 import type { ErroTransicao } from "../entities/solicitacao-troca-turno.state";
 import { CODIGOS_ERRO, naoEncontrado } from "../erros";
@@ -37,8 +37,8 @@ class CancelarTrocaTurnoUseCase extends BaseUseCase<
     input: CancelarTrocaTurnoInput,
   ): Promise<Result<SolicitacaoTrocaTurno, Erro>> {
     const ids = Result.combine([
-      idDoCampo(SolicitacaoTrocaTurnoId.from(input.solicitacaoId), "solicitacaoId"),
-      idDoCampo(FuncionarioId.from(input.solicitanteId), "solicitanteId"),
+      SolicitacaoTrocaTurnoId.from(input.solicitacaoId, opcoesDeId("solicitacaoId")),
+      FuncionarioId.from(input.solicitanteId, opcoesDeId("solicitanteId")),
     ]);
     if (ids.isFail()) return ids;
     const [solicitacaoId, solicitanteId] = ids.value;

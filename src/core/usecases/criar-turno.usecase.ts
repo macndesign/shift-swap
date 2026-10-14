@@ -1,5 +1,5 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
-import { idDoCampo, SupervisorId } from "../entities/ids";
+import { opcoesDeId, SupervisorId } from "../entities/ids";
 import { type CriarTurnoProps, Turno } from "../entities/turno.entity";
 import { naoEncontrado } from "../erros";
 import type { SupervisorRepository } from "../ports/supervisor.repository";
@@ -25,7 +25,7 @@ class CriarTurnoUseCase extends BaseUseCase<
   protected async handle(
     input: CriarTurnoInput,
   ): Promise<Result<Turno, ValidationError | NotFoundError>> {
-    const supervisorId = idDoCampo(SupervisorId.from(input.supervisorId), "supervisorId");
+    const supervisorId = SupervisorId.from(input.supervisorId, opcoesDeId("supervisorId"));
     if (supervisorId.isFail()) return supervisorId;
     if (!(await this.supervisorRepository.findById(supervisorId.value))) {
       return Result.fail(naoEncontrado.supervisor());

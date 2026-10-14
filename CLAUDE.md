@@ -107,8 +107,8 @@ próprios porque os VOs prontos do core-kernel não permitem trocar código/mens
 - Toda falha é um erro tipado do core-kernel com `code` de `CODIGOS_ERRO`: `ValidationError`
   (entrada inválida), `NotFoundError` (`naoEncontrado.turno()` etc.), `ConflictError` (estado
   não permite), `ForbiddenError` (não é a pessoa autorizada).
-- Ids vindos de `string` são convertidos com `idDoCampo(XxxId.from(raw), "campo")`, que devolve
-  `ID_INVALIDO` apontando o campo certo.
+- Ids vindos de `string` são convertidos com `XxxId.from(raw, opcoesDeId("campo"))` (`ids.ts`),
+  que devolve `ID_INVALIDO` apontando o campo certo.
 - Ao criar um código novo, adicione em `CODIGOS_ERRO` (é API pública).
 
 ### Use-cases
@@ -118,7 +118,7 @@ próprios porque os VOs prontos do core-kernel não permitem trocar código/mens
   a API montar os próprios DTOs).
 - Recebem as ports via construtor, tipadas pelo mínimo usado
   (`Pick<TurnoRepository, "findById" | "update">`), e o `Clock` quando registram data.
-- Fluxo: converter ids (`idDoCampo`) → buscar (`null` → `naoEncontrado.x()`) → regra no domínio →
+- Fluxo: converter ids (`XxxId.from(raw, opcoesDeId("campo"))`) → buscar (`null` → `naoEncontrado.x()`) → regra no domínio →
   persistir. Propagar falhas com `if (r.isFail()) return r;`.
 - Use-case de leitura sem parâmetros: `BaseUseCase<void, Output[]>`.
 

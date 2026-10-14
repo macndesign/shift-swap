@@ -1,5 +1,5 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
-import { FuncionarioId, idDoCampo } from "../entities/ids";
+import { FuncionarioId, opcoesDeId } from "../entities/ids";
 import { naoEncontrado } from "../erros";
 import type { FuncionarioRepository } from "../ports/funcionario.repository";
 
@@ -17,7 +17,7 @@ class RemoverFuncionarioUseCase extends BaseUseCase<RemoverFuncionarioInput, voi
   }
 
   protected async handle(input: RemoverFuncionarioInput): Promise<Result<void, Erro>> {
-    const id = idDoCampo(FuncionarioId.from(input.id), "id");
+    const id = FuncionarioId.from(input.id, opcoesDeId("id"));
     if (id.isFail()) return id;
 
     if (!(await this.funcionarioRepository.findById(id.value))) {

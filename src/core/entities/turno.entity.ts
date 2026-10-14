@@ -1,6 +1,6 @@
 import { ConflictError, Entity, Result, ValidationError } from "core-kernel";
 import { CODIGOS_ERRO } from "../erros";
-import { FuncionarioId, idDoCampo, TurnoId } from "./ids";
+import { FuncionarioId, opcoesDeId, TurnoId } from "./ids";
 
 /**
  * Data e horas ficam como texto em horário local, sem fuso (`YYYY-MM-DD`, `HH:mm`): é assim
@@ -106,7 +106,7 @@ class Turno extends Entity<TurnoProps, TurnoId> {
     const horario = Turno.validarHorario(props);
     if (horario.isFail()) return horario;
 
-    return idDoCampo(FuncionarioId.from(props.funcionarioId), "funcionarioId").map(
+    return FuncionarioId.from(props.funcionarioId, opcoesDeId("funcionarioId")).map(
       (funcionarioId) =>
         new Turno(
           {
