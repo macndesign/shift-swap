@@ -1,7 +1,7 @@
 import { InMemoryRepository } from "core-kernel/testing";
-import type { FuncionarioId } from "../../entities/ids";
-import type { Turno } from "../../entities/turno.entity";
-import type { TurnoRepository } from "../../ports/turno.repository";
+import type { FuncionarioId } from "../../entities/ids.js";
+import type { Turno } from "../../entities/turno.entity.js";
+import type { TurnoRepository } from "../../ports/turno.repository.js";
 
 class TurnoInMemoryRepository extends InMemoryRepository<Turno> implements TurnoRepository {
   async findAll(): Promise<Turno[]> {

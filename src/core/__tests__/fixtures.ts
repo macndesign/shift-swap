@@ -1,5 +1,5 @@
 import { FixedClock } from "core-kernel/testing";
-import { FuncionarioId, SolicitacaoTrocaTurnoId, SupervisorId, TurnoId } from "../entities/ids";
+import { FuncionarioId, SolicitacaoTrocaTurnoId, SupervisorId, TurnoId } from "../entities/ids.js";
 
 /** Atalhos para criar ids tipados nos testes. */
 export const funcionarioId = (valor: string) => FuncionarioId.from(valor).unwrap();

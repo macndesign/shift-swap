@@ -1,8 +1,8 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
-import { opcoesDeId, TurnoId } from "../entities/ids";
-import type { Turno } from "../entities/turno.entity";
-import { naoEncontrado } from "../erros";
-import type { TurnoRepository } from "../ports/turno.repository";
+import { opcoesDeId, TurnoId } from "../entities/ids.js";
+import type { Turno } from "../entities/turno.entity.js";
+import { naoEncontrado } from "../erros.js";
+import type { TurnoRepository } from "../ports/turno.repository.js";
 
 interface BuscarTurnoPorIdInput {
   id: string;

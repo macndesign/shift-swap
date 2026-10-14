@@ -1,6 +1,6 @@
 import { Result, type ValidationError } from "core-kernel";
-import { FuncionarioId } from "./ids";
-import { type CreatePessoaProps, PessoaEntity, type PessoaProps } from "./pessoa.entity";
+import { FuncionarioId } from "./ids.js";
+import { type CreatePessoaProps, PessoaEntity, type PessoaProps } from "./pessoa.entity.js";
 
 class FuncionarioEntity extends PessoaEntity<FuncionarioId> {
   private constructor(props: PessoaProps, id: FuncionarioId) {

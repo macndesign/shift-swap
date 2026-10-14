@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { PessoaEntity } from "../pessoa.entity";
-import { SupervisorEntity } from "../supervisor.entity";
+import { PessoaEntity } from "../pessoa.entity.js";
+import { SupervisorEntity } from "../supervisor.entity.js";
 
 describe("SupervisorEntity", () => {
   it("cria uma SupervisorEntity válida com nome e email válidos", () => {

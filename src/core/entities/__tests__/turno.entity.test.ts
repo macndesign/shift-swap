@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { funcionarioId } from "../../__tests__/fixtures";
-import { Turno } from "../turno.entity";
+import { funcionarioId } from "../../__tests__/fixtures.js";
+import { Turno } from "../turno.entity.js";
 
 describe("Turno", () => {
   it("cria um Turno válido", () => {

@@ -1,6 +1,6 @@
 import { ConflictError, Entity, Result, ValidationError } from "core-kernel";
-import { CODIGOS_ERRO } from "../erros";
-import { FuncionarioId, opcoesDeId, TurnoId } from "./ids";
+import { CODIGOS_ERRO } from "../erros.js";
+import { FuncionarioId, opcoesDeId, TurnoId } from "./ids.js";
 
 /**
  * Data e horas ficam como texto em horário local, sem fuso (`YYYY-MM-DD`, `HH:mm`): é assim

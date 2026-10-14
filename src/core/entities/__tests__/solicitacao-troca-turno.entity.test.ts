@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { AGORA, funcionarioId, solicitacaoId, supervisorId } from "../../__tests__/fixtures";
-import { SolicitacaoTrocaTurno } from "../solicitacao-troca-turno.entity";
-import { Turno } from "../turno.entity";
+import { AGORA, funcionarioId, solicitacaoId, supervisorId } from "../../__tests__/fixtures.js";
+import { SolicitacaoTrocaTurno } from "../solicitacao-troca-turno.entity.js";
+import { Turno } from "../turno.entity.js";
 
 const FUNC_A = funcionarioId("func-a");
 const FUNC_B = funcionarioId("func-b");

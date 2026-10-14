@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { supervisorId } from "../../__tests__/fixtures";
-import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository";
-import { CriarSupervisorUseCase } from "../criar-supervisor.usecase";
+import { supervisorId } from "../../__tests__/fixtures.js";
+import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository.js";
+import { CriarSupervisorUseCase } from "../criar-supervisor.usecase.js";
 
 function criarSut() {
   const supervisorRepository = new SupervisorInMemoryRepository();

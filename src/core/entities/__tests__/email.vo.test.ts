@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { EmailVO } from "../email.vo";
+import { EmailVO } from "../email.vo.js";
 
 describe("EmailVO", () => {
   it("cria um EmailVO válido", () => {

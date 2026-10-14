@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { PessoaEntity } from "../pessoa.entity";
+import { PessoaEntity } from "../pessoa.entity.js";
 
 describe("PessoaEntity", () => {
   it("cria uma PessoaEntity válida com nome e email válidos", () => {

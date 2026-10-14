@@ -20,3 +20,6 @@ jobs:
       - run: bun test
 
       - run: bun run build
+
+      # Tipos publicados resolvem para consumidores Node ESM, Node CJS e bundlers.
+      - run: bun run check:package

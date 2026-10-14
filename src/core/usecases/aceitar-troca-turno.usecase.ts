@@ -6,13 +6,13 @@ import {
   Result,
   type ValidationError,
 } from "core-kernel";
-import { FuncionarioId, opcoesDeId, SolicitacaoTrocaTurnoId } from "../entities/ids";
-import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
-import type { ErroTransicao } from "../entities/solicitacao-troca-turno.state";
-import { CODIGOS_ERRO, naoEncontrado } from "../erros";
-import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
-import type { TurnoRepository } from "../ports/turno.repository";
-import { temConflitoDeHorario } from "./conflito-horario";
+import { FuncionarioId, opcoesDeId, SolicitacaoTrocaTurnoId } from "../entities/ids.js";
+import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity.js";
+import type { ErroTransicao } from "../entities/solicitacao-troca-turno.state.js";
+import { CODIGOS_ERRO, naoEncontrado } from "../erros.js";
+import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository.js";
+import type { TurnoRepository } from "../ports/turno.repository.js";
+import { temConflitoDeHorario } from "./conflito-horario.js";
 
 interface AceitarTrocaTurnoInput {
   solicitacaoId: string;

@@ -1,6 +1,6 @@
 import { BaseUseCase, Result } from "core-kernel";
-import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
-import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
+import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity.js";
+import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository.js";
 
 class ListarSolicitacoesTrocaTurnoUseCase extends BaseUseCase<void, SolicitacaoTrocaTurno[]> {
   constructor(

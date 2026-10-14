@@ -1,4 +1,4 @@
-import type { Turno } from "../entities/turno.entity";
+import type { Turno } from "../entities/turno.entity.js";
 
 /**
  * Regra de domínio pura: algum turno do funcionário se sobrepõe ao turno alvo?

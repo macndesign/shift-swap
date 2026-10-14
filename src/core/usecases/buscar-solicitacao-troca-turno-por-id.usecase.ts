@@ -1,8 +1,8 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
-import { opcoesDeId, SolicitacaoTrocaTurnoId } from "../entities/ids";
-import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
-import { naoEncontrado } from "../erros";
-import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
+import { opcoesDeId, SolicitacaoTrocaTurnoId } from "../entities/ids.js";
+import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity.js";
+import { naoEncontrado } from "../erros.js";
+import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository.js";
 
 interface BuscarSolicitacaoTrocaTurnoPorIdInput {
   id: string;

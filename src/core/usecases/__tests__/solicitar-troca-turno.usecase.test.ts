@@ -1,12 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { AGORA } from "../../__tests__/fixtures";
-import { FuncionarioEntity } from "../../entities/funcionario.entity";
-import { Turno } from "../../entities/turno.entity";
-import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
-import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
-import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
-import { SolicitarTrocaTurnoUseCase } from "../solicitar-troca-turno.usecase";
+import { AGORA } from "../../__tests__/fixtures.js";
+import { FuncionarioEntity } from "../../entities/funcionario.entity.js";
+import { Turno } from "../../entities/turno.entity.js";
+import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository.js";
+import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository.js";
+import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository.js";
+import { SolicitarTrocaTurnoUseCase } from "../solicitar-troca-turno.usecase.js";
 
 function criarTurno(dono = "func-a") {
   return Turno.create({

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { NameVO } from "../name.vo";
+import { NameVO } from "../name.vo.js";
 
 describe("NameVO", () => {
   it("cria um NameVO válido", () => {

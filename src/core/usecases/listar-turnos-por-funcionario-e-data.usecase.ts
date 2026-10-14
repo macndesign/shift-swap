@@ -1,7 +1,7 @@
 import { BaseUseCase, Result, type ValidationError } from "core-kernel";
-import { FuncionarioId, opcoesDeId } from "../entities/ids";
-import type { Turno } from "../entities/turno.entity";
-import type { TurnoRepository } from "../ports/turno.repository";
+import { FuncionarioId, opcoesDeId } from "../entities/ids.js";
+import type { Turno } from "../entities/turno.entity.js";
+import type { TurnoRepository } from "../ports/turno.repository.js";
 
 interface ListarTurnosPorFuncionarioEDataInput {
   funcionarioId: string;

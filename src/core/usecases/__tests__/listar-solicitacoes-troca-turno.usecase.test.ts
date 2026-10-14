@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { assertOk } from "core-kernel/testing";
-import { funcionarioId } from "../../__tests__/fixtures";
-import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
-import { Turno } from "../../entities/turno.entity";
-import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
-import { ListarSolicitacoesTrocaTurnoUseCase } from "../listar-solicitacoes-troca-turno.usecase";
+import { funcionarioId } from "../../__tests__/fixtures.js";
+import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity.js";
+import { Turno } from "../../entities/turno.entity.js";
+import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository.js";
+import { ListarSolicitacoesTrocaTurnoUseCase } from "../listar-solicitacoes-troca-turno.usecase.js";
 
 function criarTurno(funcionarioId: string) {
   return Turno.create({

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { funcionarioId } from "../../__tests__/fixtures";
-import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
-import { CriarFuncionarioUseCase } from "../criar-funcionario.usecase";
+import { funcionarioId } from "../../__tests__/fixtures.js";
+import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository.js";
+import { CriarFuncionarioUseCase } from "../criar-funcionario.usecase.js";
 
 function criarSut() {
   const funcionarioRepository = new FuncionarioInMemoryRepository();

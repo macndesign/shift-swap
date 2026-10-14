@@ -1,6 +1,6 @@
 import type { CreateRepository, FindByIdRepository, UpdateRepository } from "core-kernel";
-import type { FuncionarioId, TurnoId } from "../entities/ids";
-import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
+import type { FuncionarioId, TurnoId } from "../entities/ids.js";
+import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity.js";
 
 /** Sem delete: solicitações são encerradas por transição, para manter o histórico. */
 interface SolicitacaoTrocaTurnoRepository

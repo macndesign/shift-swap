@@ -1,7 +1,7 @@
 import { Entity, type GuardOptions, Result, UniqueId, type ValidationError } from "core-kernel";
-import { EmailVO } from "./email.vo";
-import { opcoesDeId } from "./ids";
-import { NameVO } from "./name.vo";
+import { EmailVO } from "./email.vo.js";
+import { opcoesDeId } from "./ids.js";
+import { NameVO } from "./name.vo.js";
 
 interface PessoaProps {
   name: NameVO;

@@ -1,7 +1,7 @@
 import { BaseUseCase, Result, ValidationError } from "core-kernel";
-import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
-import { CODIGOS_ERRO } from "../erros";
-import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
+import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity.js";
+import { CODIGOS_ERRO } from "../erros.js";
+import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository.js";
 
 interface ExpirarSolicitacoesTrocaTurnoInput {
   /** Data e hora atuais no formato `YYYY-MM-DDTHH:mm`, no mesmo fuso dos turnos. */
