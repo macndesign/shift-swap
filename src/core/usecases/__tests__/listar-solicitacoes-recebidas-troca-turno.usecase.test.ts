@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { assertOk } from "core-kernel/testing";
-import { AGORA, funcionarioId } from "../../__tests__/fixtures";
-import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
-import { Turno } from "../../entities/turno.entity";
-import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
-import { ListarSolicitacoesRecebidasTrocaTurnoUseCase } from "../listar-solicitacoes-recebidas-troca-turno.usecase";
+import { AGORA, funcionarioId } from "../../__tests__/fixtures.js";
+import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity.js";
+import { Turno } from "../../entities/turno.entity.js";
+import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository.js";
+import { ListarSolicitacoesRecebidasTrocaTurnoUseCase } from "../listar-solicitacoes-recebidas-troca-turno.usecase.js";
 
 function criarSolicitacao(solicitanteId: string, destinatarioId: string) {
   const turno = Turno.create({

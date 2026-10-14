@@ -1,6 +1,6 @@
 import { Entity, ForbiddenError, Result, ValidationError } from "core-kernel";
-import { CODIGOS_ERRO } from "../erros";
-import { type FuncionarioId, SolicitacaoTrocaTurnoId, type SupervisorId } from "./ids";
+import { CODIGOS_ERRO } from "../erros.js";
+import { type FuncionarioId, SolicitacaoTrocaTurnoId, type SupervisorId } from "./ids.js";
 import {
   type AceitarSolicitacaoProps,
   type AprovarSolicitacaoProps,
@@ -13,8 +13,8 @@ import {
   type RejeitarSolicitacaoProps,
   STATUS_SOLICITACAO,
   type StatusSolicitacaoTrocaTurno,
-} from "./solicitacao-troca-turno.state";
-import type { Turno } from "./turno.entity";
+} from "./solicitacao-troca-turno.state.js";
+import type { Turno } from "./turno.entity.js";
 
 interface SolicitacaoTrocaTurnoProps {
   turno: Turno;

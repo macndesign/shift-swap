@@ -1,5 +1,5 @@
 import { Guard, type Result, type ValidationError, ValueObject } from "core-kernel";
-import { CODIGOS_ERRO } from "../erros";
+import { CODIGOS_ERRO } from "../erros.js";
 
 const MIN_LENGTH = 3;
 

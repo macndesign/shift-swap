@@ -1,8 +1,8 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
-import { opcoesDeId, SupervisorId, TurnoId } from "../entities/ids";
-import { naoEncontrado } from "../erros";
-import type { SupervisorRepository } from "../ports/supervisor.repository";
-import type { TurnoRepository } from "../ports/turno.repository";
+import { opcoesDeId, SupervisorId, TurnoId } from "../entities/ids.js";
+import { naoEncontrado } from "../erros.js";
+import type { SupervisorRepository } from "../ports/supervisor.repository.js";
+import type { TurnoRepository } from "../ports/turno.repository.js";
 
 interface RemoverTurnoInput {
   supervisorId: string;

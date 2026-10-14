@@ -1,6 +1,6 @@
 import { BaseUseCase, Result } from "core-kernel";
-import type { FuncionarioEntity } from "../entities/funcionario.entity";
-import type { FuncionarioRepository } from "../ports/funcionario.repository";
+import type { FuncionarioEntity } from "../entities/funcionario.entity.js";
+import type { FuncionarioRepository } from "../ports/funcionario.repository.js";
 
 class ListarFuncionariosUseCase extends BaseUseCase<void, FuncionarioEntity[]> {
   constructor(private readonly funcionarioRepository: Pick<FuncionarioRepository, "findAll">) {

@@ -1,6 +1,6 @@
 import { InMemoryRepository } from "core-kernel/testing";
-import type { FuncionarioEntity } from "../../entities/funcionario.entity";
-import type { FuncionarioRepository } from "../../ports/funcionario.repository";
+import type { FuncionarioEntity } from "../../entities/funcionario.entity.js";
+import type { FuncionarioRepository } from "../../ports/funcionario.repository.js";
 
 class FuncionarioInMemoryRepository
   extends InMemoryRepository<FuncionarioEntity>

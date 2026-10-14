@@ -1,6 +1,6 @@
 import { BaseUseCase, Result, type ValidationError } from "core-kernel";
-import { SupervisorEntity } from "../entities/supervisor.entity";
-import type { SupervisorRepository } from "../ports/supervisor.repository";
+import { SupervisorEntity } from "../entities/supervisor.entity.js";
+import type { SupervisorRepository } from "../ports/supervisor.repository.js";
 
 interface CriarSupervisorInput {
   /** Id externo opcional (ex.: id do usuário no BetterAuth). */

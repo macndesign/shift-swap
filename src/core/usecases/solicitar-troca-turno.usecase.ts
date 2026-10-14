@@ -6,12 +6,12 @@ import {
   Result,
   type ValidationError,
 } from "core-kernel";
-import { FuncionarioId, opcoesDeId, TurnoId } from "../entities/ids";
-import { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
-import { CODIGOS_ERRO, naoEncontrado } from "../erros";
-import type { FuncionarioRepository } from "../ports/funcionario.repository";
-import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
-import type { TurnoRepository } from "../ports/turno.repository";
+import { FuncionarioId, opcoesDeId, TurnoId } from "../entities/ids.js";
+import { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity.js";
+import { CODIGOS_ERRO, naoEncontrado } from "../erros.js";
+import type { FuncionarioRepository } from "../ports/funcionario.repository.js";
+import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository.js";
+import type { TurnoRepository } from "../ports/turno.repository.js";
 
 interface SolicitarTrocaTurnoInput {
   turnoId: string;

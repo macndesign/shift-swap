@@ -1,8 +1,8 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
-import type { FuncionarioEntity } from "../entities/funcionario.entity";
-import { FuncionarioId, opcoesDeId } from "../entities/ids";
-import { naoEncontrado } from "../erros";
-import type { FuncionarioRepository } from "../ports/funcionario.repository";
+import type { FuncionarioEntity } from "../entities/funcionario.entity.js";
+import { FuncionarioId, opcoesDeId } from "../entities/ids.js";
+import { naoEncontrado } from "../erros.js";
+import type { FuncionarioRepository } from "../ports/funcionario.repository.js";
 
 interface BuscarFuncionarioPorIdInput {
   id: string;

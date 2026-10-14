@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { SupervisorEntity } from "../../entities/supervisor.entity";
-import { Turno } from "../../entities/turno.entity";
-import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository";
-import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
-import { RemoverTurnoUseCase } from "../remover-turno.usecase";
+import { SupervisorEntity } from "../../entities/supervisor.entity.js";
+import { Turno } from "../../entities/turno.entity.js";
+import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository.js";
+import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository.js";
+import { RemoverTurnoUseCase } from "../remover-turno.usecase.js";
 
 function criarSut() {
   const supervisorRepository = new SupervisorInMemoryRepository();

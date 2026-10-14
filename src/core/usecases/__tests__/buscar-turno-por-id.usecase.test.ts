@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { Turno } from "../../entities/turno.entity";
-import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
-import { BuscarTurnoPorIdUseCase } from "../buscar-turno-por-id.usecase";
+import { Turno } from "../../entities/turno.entity.js";
+import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository.js";
+import { BuscarTurnoPorIdUseCase } from "../buscar-turno-por-id.usecase.js";
 
 function criarSut() {
   const turnoRepository = new TurnoInMemoryRepository();

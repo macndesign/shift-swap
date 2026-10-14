@@ -1,6 +1,6 @@
 import { BaseUseCase, Result, type ValidationError } from "core-kernel";
-import { FuncionarioEntity } from "../entities/funcionario.entity";
-import type { FuncionarioRepository } from "../ports/funcionario.repository";
+import { FuncionarioEntity } from "../entities/funcionario.entity.js";
+import type { FuncionarioRepository } from "../ports/funcionario.repository.js";
 
 interface CriarFuncionarioInput {
   /** Id externo opcional (ex.: id do usuário no BetterAuth). */

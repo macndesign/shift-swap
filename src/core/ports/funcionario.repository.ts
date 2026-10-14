@@ -1,5 +1,5 @@
 import type { CrudRepository } from "core-kernel";
-import type { FuncionarioEntity } from "../entities/funcionario.entity";
+import type { FuncionarioEntity } from "../entities/funcionario.entity.js";
 
 /** Falha de infraestrutura é exceção (o use case converte em erro `UNEXPECTED`). */
 interface FuncionarioRepository extends CrudRepository<FuncionarioEntity> {

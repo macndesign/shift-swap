@@ -1,7 +1,7 @@
 import { InMemoryRepository } from "core-kernel/testing";
-import type { FuncionarioId, TurnoId } from "../../entities/ids";
-import type { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
-import type { SolicitacaoTrocaTurnoRepository } from "../../ports/solicitacao-troca-turno.repository";
+import type { FuncionarioId, TurnoId } from "../../entities/ids.js";
+import type { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity.js";
+import type { SolicitacaoTrocaTurnoRepository } from "../../ports/solicitacao-troca-turno.repository.js";
 
 const emAberto = (solicitacao: SolicitacaoTrocaTurno) =>
   solicitacao.status === "pendente" || solicitacao.status === "aguardando_aprovacao";

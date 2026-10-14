@@ -1,5 +1,5 @@
 import { type GuardOptions, UniqueId } from "core-kernel";
-import { CODIGOS_ERRO } from "../erros";
+import { CODIGOS_ERRO } from "../erros.js";
 
 /** Ids tipados: o compilador não deixa passar o id de um tipo onde se espera o de outro. */
 class FuncionarioId extends UniqueId {

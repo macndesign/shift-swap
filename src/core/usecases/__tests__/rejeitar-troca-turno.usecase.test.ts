@@ -1,12 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { AGORA, funcionarioId, relogio } from "../../__tests__/fixtures";
-import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
-import { SupervisorEntity } from "../../entities/supervisor.entity";
-import { Turno } from "../../entities/turno.entity";
-import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
-import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository";
-import { RejeitarTrocaTurnoUseCase } from "../rejeitar-troca-turno.usecase";
+import { AGORA, funcionarioId, relogio } from "../../__tests__/fixtures.js";
+import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity.js";
+import { SupervisorEntity } from "../../entities/supervisor.entity.js";
+import { Turno } from "../../entities/turno.entity.js";
+import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository.js";
+import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository.js";
+import { RejeitarTrocaTurnoUseCase } from "../rejeitar-troca-turno.usecase.js";
 
 function criarSolicitacaoAceita() {
   const turno = Turno.create({

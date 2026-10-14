@@ -70,6 +70,12 @@ Conceitos de domínio, nomes de classe/arquivo e mensagens de erro em **portugu�
 (`TURNO_NAO_ENCONTRADO`), declarados em `CODIGOS_ERRO` (`src/core/erros.ts`). Os blocos do
 core-kernel mantêm os nomes em inglês (`Entity`, `Result`, `ValueObject`).
 
+### Imports
+Imports relativos **sempre com extensão `.js`** (`from "./ids.js"`), mesmo apontando para `.ts`: o
+projeto usa `module`/`moduleResolution` `NodeNext`, e sem a extensão os `.d.ts` publicados não
+resolvem para consumidores Node (os tipos viram `unknown` em silêncio). O `check:package` (attw) no
+CI pega isso.
+
 ### Nomenclatura de arquivos
 kebab-case terminando no sufixo do tipo: `*.entity.ts`, `*.vo.ts`, `*.usecase.ts`,
 `*.repository.ts`. Classe em PascalCase correspondente (`turno.entity.ts` →
@@ -156,7 +162,8 @@ exportados de propósito: os repositórios in-memory (só para teste) e os bloco
 bun run lint                              # Biome: formatação + lint
 bun test                                  # suíte inteira
 ./node_modules/.bin/tsc.exe --noEmit      # type-check completo (inclui testes)
-bun run build                             # build real: ESM + CJS + .d.ts
+bun run build                             # build real: ESM + CJS + .d.ts (ESM e CJS)
+bun run check:package                     # attw: tipos publicados resolvem em Node ESM/CJS e bundler
 ```
 
 Neste ambiente, `npx tsc`/`tsc` direto falha com um erro enganoso ("This is not the tsc
@@ -174,7 +181,9 @@ porquê — não desative a regra globalmente no `biome.json` sem necessidade.
 
 `tsconfig.build.json` estende `tsconfig.json` excluindo `__tests__`/`*.test.ts` — é ele
 quem o script `build:types` usa, para não vazar tipos de teste no `.d.ts` publicado.
-Não aponte `build:types` de volta para o `tsconfig.json` puro.
+Não aponte `build:types` de volta para o `tsconfig.json` puro. Ele gera duas cópias das
+declarações: `dist/` (para `import`) e `dist/cjs/` (para `require`, marcada como CommonJS por
+`scripts/marcar-tipos-cjs.mjs`); o `exports` do `package.json` aponta cada condição para a sua.
 
 O `bun build` usa `--packages external`: o `core-kernel` **não** pode ser empacotado no `dist`
 (o consumidor teria duas cópias das classes). Mantenha-o como `peerDependency`.

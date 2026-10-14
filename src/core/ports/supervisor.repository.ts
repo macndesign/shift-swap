@@ -1,5 +1,5 @@
 import type { CreateRepository, FindByIdRepository } from "core-kernel";
-import type { SupervisorEntity } from "../entities/supervisor.entity";
+import type { SupervisorEntity } from "../entities/supervisor.entity.js";
 
 /** Só o que os use cases usam hoje: criar e buscar por id. */
 interface SupervisorRepository

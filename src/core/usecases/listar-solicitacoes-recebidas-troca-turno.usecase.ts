@@ -1,7 +1,7 @@
 import { BaseUseCase, Result, type ValidationError } from "core-kernel";
-import { FuncionarioId, opcoesDeId } from "../entities/ids";
-import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
-import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
+import { FuncionarioId, opcoesDeId } from "../entities/ids.js";
+import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity.js";
+import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository.js";
 
 interface ListarSolicitacoesRecebidasTrocaTurnoInput {
   funcionarioId: string;

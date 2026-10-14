@@ -7,9 +7,14 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "files": [
@@ -29,14 +34,16 @@
     "build": "bun run build:esm && bun run build:cjs && bun run build:types",
     "build:esm": "bun build ./src/index.ts --outdir ./dist --target node --format esm --packages external",
     "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs --packages external",
-    "build:types": "tsc -p tsconfig.build.json",
+    "build:types": "tsc -p tsconfig.build.json && tsc -p tsconfig.build.cjs.json && node scripts/marcar-tipos-cjs.mjs",
     "test": "bun test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "prepare": "node scripts/prepare.mjs"
+    "prepare": "node scripts/prepare.mjs",
+    "check:package": "attw --pack . --profile node16"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@biomejs/biome": "^2.5.14",
     "bun-types": "^1.4.2",
     "core-kernel": "^0.2.0",

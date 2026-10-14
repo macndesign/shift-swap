@@ -1,7 +1,7 @@
 import { ConflictError, ForbiddenError, Result, ValidationError } from "core-kernel";
-import { CODIGOS_ERRO } from "../erros";
-import type { FuncionarioId, SupervisorId } from "./ids";
-import type { Turno } from "./turno.entity";
+import { CODIGOS_ERRO } from "../erros.js";
+import type { FuncionarioId, SupervisorId } from "./ids.js";
+import type { Turno } from "./turno.entity.js";
 
 type StatusSolicitacaoTrocaTurno =
   | "pendente"
