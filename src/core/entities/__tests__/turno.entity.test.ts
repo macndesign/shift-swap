@@ -32,6 +32,51 @@ describe("Turno", () => {
     expect(result.error.message).toBe("Data inválida: 24-09-2026");
   });
 
+  it.each([
+    ["2026-13-01"],
+    ["2026-00-10"],
+    ["2026-02-30"],
+    ["2026-04-31"],
+    ["2026-02-29"],
+    ["2026-09-00"],
+  ])("falha quando a data %p não existe no calendário", (data) => {
+    const result = Turno.create({
+      data,
+      horaInicio: "08:00",
+      horaFim: "12:00",
+      funcionarioId: "func-a",
+    });
+
+    assertFail(result, "DATA_INVALIDA");
+    expect(result.error.message).toBe(`Data inválida: ${data}`);
+  });
+
+  it("aceita 29 de fevereiro em ano bissexto", () => {
+    assertOk(
+      Turno.create({
+        data: "2028-02-29",
+        horaInicio: "08:00",
+        horaFim: "12:00",
+        funcionarioId: "func-a",
+      }),
+    );
+  });
+
+  it("atualizarHorario também rejeita data inexistente", () => {
+    const turno = Turno.create({
+      data: "2026-09-24",
+      horaInicio: "08:00",
+      horaFim: "12:00",
+      funcionarioId: "func-a",
+    }).unwrap();
+
+    assertFail(
+      turno.atualizarHorario({ data: "2026-02-30", horaInicio: "08:00", horaFim: "12:00" }),
+      "DATA_INVALIDA",
+    );
+    expect(turno.data).toBe("2026-09-24");
+  });
+
   it("falha quando a hora de início tem formato inválido", () => {
     const result = Turno.create({
       data: "2026-09-24",
