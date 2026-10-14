@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { assertOk } from "core-kernel/testing";
 import { FuncionarioEntity } from "../../entities/funcionario.entity";
 import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
 import { ListarFuncionariosUseCase } from "../listar-funcionarios.usecase";
@@ -16,8 +17,8 @@ describe("ListarFuncionariosUseCase", () => {
 
     const result = await useCase.execute();
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toEqual([]);
+    assertOk(result);
+    expect(result.value).toEqual([]);
   });
 
   it("retorna todos os funcionários cadastrados", async () => {
@@ -25,18 +26,18 @@ describe("ListarFuncionariosUseCase", () => {
     const maria = FuncionarioEntity.create({
       name: "Maria",
       email: "maria@exemplo.com",
-    }).getValue();
+    }).unwrap();
     const joana = FuncionarioEntity.create({
       name: "Joana",
       email: "joana@exemplo.com",
-    }).getValue();
-    await funcionarioRepository.save(maria);
-    await funcionarioRepository.save(joana);
+    }).unwrap();
+    await funcionarioRepository.create(maria);
+    await funcionarioRepository.create(joana);
 
     const result = await useCase.execute();
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toHaveLength(2);
-    expect(result.getValue()).toEqual(expect.arrayContaining([maria, joana]));
+    assertOk(result);
+    expect(result.value).toHaveLength(2);
+    expect(result.value).toEqual(expect.arrayContaining([maria, joana]));
   });
 });

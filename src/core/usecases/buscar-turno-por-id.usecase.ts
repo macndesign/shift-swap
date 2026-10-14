@@ -1,24 +1,26 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
+import { idDoCampo, TurnoId } from "../entities/ids";
 import type { Turno } from "../entities/turno.entity";
+import { naoEncontrado } from "../erros";
 import type { TurnoRepository } from "../ports/turno.repository";
 
 interface BuscarTurnoPorIdInput {
   id: string;
 }
 
-class BuscarTurnoPorIdUseCase extends UseCase<BuscarTurnoPorIdInput, Turno> {
-  constructor(private readonly turnoRepository: TurnoRepository) {
+type Erro = ValidationError | NotFoundError;
+
+class BuscarTurnoPorIdUseCase extends BaseUseCase<BuscarTurnoPorIdInput, Turno, Erro> {
+  constructor(private readonly turnoRepository: Pick<TurnoRepository, "findById">) {
     super();
   }
 
-  async execute(input: BuscarTurnoPorIdInput): Promise<Result<Turno>> {
-    const turno = await this.turnoRepository.findById(input.id);
-    if (!turno) {
-      return Result.fail<Turno>("Turno não encontrado");
-    }
+  protected async handle(input: BuscarTurnoPorIdInput): Promise<Result<Turno, Erro>> {
+    const id = idDoCampo(TurnoId.from(input.id), "id");
+    if (id.isFail()) return id;
 
-    return Result.ok<Turno>(turno);
+    const turno = await this.turnoRepository.findById(id.value);
+    return turno ? Result.ok(turno) : Result.fail(naoEncontrado.turno());
   }
 }
 

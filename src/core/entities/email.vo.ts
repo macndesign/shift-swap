@@ -1,5 +1,5 @@
-import { Result } from "../../shared/result";
-import { ValueObject } from "../../shared/value-object";
+import { Guard, type Result, type ValidationError, ValueObject } from "core-kernel";
+import { CODIGOS_ERRO } from "../erros";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -8,14 +8,21 @@ class EmailVO extends ValueObject<string> {
     super(value);
   }
 
-  static create(email: string): Result<EmailVO> {
-    if (!email || email.trim().length === 0) {
-      return Result.fail<EmailVO>("Email não pode ser vazio");
-    }
-    if (!EMAIL_REGEX.test(email)) {
-      return Result.fail<EmailVO>(`Email inválido: ${email}`);
-    }
-    return Result.ok<EmailVO>(new EmailVO(email));
+  static create(email: string, campo = "email"): Result<EmailVO, ValidationError> {
+    const valor = email ?? "";
+    return Guard.notEmpty(valor, {
+      field: campo,
+      code: CODIGOS_ERRO.EMAIL_VAZIO,
+      message: "Email não pode ser vazio",
+    })
+      .flatMap(() =>
+        Guard.matches(valor, EMAIL_REGEX, {
+          field: campo,
+          code: CODIGOS_ERRO.EMAIL_INVALIDO,
+          message: `Email inválido: ${valor}`,
+        }),
+      )
+      .map(() => new EmailVO(valor));
   }
 }
 

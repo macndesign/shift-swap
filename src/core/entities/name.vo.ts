@@ -1,5 +1,5 @@
-import { Result } from "../../shared/result";
-import { ValueObject } from "../../shared/value-object";
+import { Guard, type Result, type ValidationError, ValueObject } from "core-kernel";
+import { CODIGOS_ERRO } from "../erros";
 
 const MIN_LENGTH = 3;
 
@@ -8,14 +8,21 @@ class NameVO extends ValueObject<string> {
     super(value);
   }
 
-  static create(name: string): Result<NameVO> {
-    if (!name || name.trim().length === 0) {
-      return Result.fail<NameVO>("Nome não pode ser vazio");
-    }
-    if (name.trim().length < MIN_LENGTH) {
-      return Result.fail<NameVO>(`Nome deve ter pelo menos ${MIN_LENGTH} caracteres`);
-    }
-    return Result.ok<NameVO>(new NameVO(name));
+  static create(name: string, campo = "name"): Result<NameVO, ValidationError> {
+    const aparado = (name ?? "").trim();
+    return Guard.notEmpty(aparado, {
+      field: campo,
+      code: CODIGOS_ERRO.NOME_VAZIO,
+      message: "Nome não pode ser vazio",
+    })
+      .flatMap(() =>
+        Guard.minLength(aparado, MIN_LENGTH, {
+          field: campo,
+          code: CODIGOS_ERRO.NOME_CURTO,
+          message: `Nome deve ter pelo menos ${MIN_LENGTH} caracteres`,
+        }),
+      )
+      .map(() => new NameVO(name));
   }
 }
 

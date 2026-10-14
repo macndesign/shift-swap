@@ -1,6 +1,14 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import {
+  BaseUseCase,
+  type Clock,
+  type NotFoundError,
+  Result,
+  type ValidationError,
+} from "core-kernel";
+import { idDoCampo, SolicitacaoTrocaTurnoId, SupervisorId } from "../entities/ids";
 import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
+import type { ErroTransicao } from "../entities/solicitacao-troca-turno.state";
+import { naoEncontrado } from "../erros";
 import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
 import type { SupervisorRepository } from "../ports/supervisor.repository";
 
@@ -10,36 +18,51 @@ interface RejeitarTrocaTurnoInput {
   motivo: string;
 }
 
-class RejeitarTrocaTurnoUseCase extends UseCase<RejeitarTrocaTurnoInput, SolicitacaoTrocaTurno> {
+type Erro = ValidationError | NotFoundError | ErroTransicao;
+
+/** O supervisor não autoriza uma troca já aceita (exige motivo). */
+class RejeitarTrocaTurnoUseCase extends BaseUseCase<
+  RejeitarTrocaTurnoInput,
+  SolicitacaoTrocaTurno,
+  Erro
+> {
   constructor(
-    private readonly supervisorRepository: SupervisorRepository,
-    private readonly solicitacaoRepository: SolicitacaoTrocaTurnoRepository,
+    private readonly supervisorRepository: Pick<SupervisorRepository, "findById">,
+    private readonly solicitacaoRepository: Pick<
+      SolicitacaoTrocaTurnoRepository,
+      "findById" | "update"
+    >,
+    private readonly clock: Clock,
   ) {
     super();
   }
 
-  async execute(input: RejeitarTrocaTurnoInput): Promise<Result<SolicitacaoTrocaTurno>> {
-    const supervisor = await this.supervisorRepository.findById(input.supervisorId);
-    if (!supervisor) {
-      return Result.fail<SolicitacaoTrocaTurno>("Supervisor não encontrado");
+  protected async handle(
+    input: RejeitarTrocaTurnoInput,
+  ): Promise<Result<SolicitacaoTrocaTurno, Erro>> {
+    const ids = Result.combine([
+      idDoCampo(SolicitacaoTrocaTurnoId.from(input.solicitacaoId), "solicitacaoId"),
+      idDoCampo(SupervisorId.from(input.supervisorId), "supervisorId"),
+    ]);
+    if (ids.isFail()) return ids;
+    const [solicitacaoId, supervisorId] = ids.value;
+
+    if (!(await this.supervisorRepository.findById(supervisorId))) {
+      return Result.fail(naoEncontrado.supervisor());
     }
 
-    const solicitacao = await this.solicitacaoRepository.findById(input.solicitacaoId);
-    if (!solicitacao) {
-      return Result.fail<SolicitacaoTrocaTurno>("Solicitação não encontrada");
-    }
+    const solicitacao = await this.solicitacaoRepository.findById(solicitacaoId);
+    if (!solicitacao) return Result.fail(naoEncontrado.solicitacao());
 
-    const rejeitarOrError = solicitacao.rejeitar({
-      supervisorId: input.supervisorId,
+    const rejeitada = solicitacao.rejeitar({
+      supervisorId,
       motivo: input.motivo,
+      agora: this.clock.now(),
     });
-    if (rejeitarOrError.isFailure) {
-      return Result.fail<SolicitacaoTrocaTurno>(rejeitarOrError.error as string | Error);
-    }
+    if (rejeitada.isFail()) return rejeitada;
 
     await this.solicitacaoRepository.update(solicitacao);
-
-    return Result.ok<SolicitacaoTrocaTurno>(solicitacao);
+    return Result.ok(solicitacao);
   }
 }
 

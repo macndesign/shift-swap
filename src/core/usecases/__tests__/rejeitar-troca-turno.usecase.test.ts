@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
+import { AGORA, funcionarioId, relogio } from "../../__tests__/fixtures";
 import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { SupervisorEntity } from "../../entities/supervisor.entity";
 import { Turno } from "../../entities/turno.entity";
@@ -12,13 +14,13 @@ function criarSolicitacaoAceita() {
     horaInicio: "08:00",
     horaFim: "12:00",
     funcionarioId: "func-a",
-  }).getValue();
+  }).unwrap();
   const solicitacao = SolicitacaoTrocaTurno.create({
     turno,
-    solicitanteId: "func-a",
-    destinatarioId: "func-b",
-  }).getValue();
-  solicitacao.aceitar({ funcionarioId: "func-b" });
+    solicitanteId: funcionarioId("func-a"),
+    destinatarioId: funcionarioId("func-b"),
+  }).unwrap();
+  solicitacao.aceitar({ funcionarioId: funcionarioId("func-b"), agora: AGORA }).unwrap();
   return solicitacao;
 }
 
@@ -26,13 +28,17 @@ function criarSupervisor() {
   return SupervisorEntity.create({
     name: "Supervisor Teste",
     email: "sup@exemplo.com",
-  }).getValue();
+  }).unwrap();
 }
 
 function criarSut() {
   const supervisorRepository = new SupervisorInMemoryRepository();
   const solicitacaoRepository = new SolicitacaoTrocaTurnoInMemoryRepository();
-  const useCase = new RejeitarTrocaTurnoUseCase(supervisorRepository, solicitacaoRepository);
+  const useCase = new RejeitarTrocaTurnoUseCase(
+    supervisorRepository,
+    solicitacaoRepository,
+    relogio(),
+  );
 
   return { supervisorRepository, solicitacaoRepository, useCase };
 }
@@ -41,111 +47,112 @@ describe("RejeitarTrocaTurnoUseCase", () => {
   it("rejeita a solicitação aceita registrando o motivo", async () => {
     const { supervisorRepository, solicitacaoRepository, useCase } = criarSut();
     const supervisor = criarSupervisor();
-    await supervisorRepository.save(supervisor);
+    await supervisorRepository.create(supervisor);
     const solicitacao = criarSolicitacaoAceita();
-    await solicitacaoRepository.save(solicitacao);
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
-      supervisorId: supervisor.id,
+      solicitacaoId: solicitacao.id.value,
+      supervisorId: supervisor.id.value,
       motivo: "Equipe reduzida",
     });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue().status).toBe("rejeitada");
-    expect(result.getValue().motivo).toBe("Equipe reduzida");
-    expect(result.getValue().decididoPorId).toBe(supervisor.id);
-    expect(solicitacao.turno.funcionarioId).toBe("func-a");
+    assertOk(result);
+    expect(result.value.status).toBe("rejeitada");
+    expect(result.value.motivo).toBe("Equipe reduzida");
+    expect(result.value.decididoPorId?.equals(supervisor.id)).toBe(true);
+    expect(result.value.decididoEm).toEqual(AGORA);
+    expect(solicitacao.turno.funcionarioId.value).toBe("func-a");
   });
 
   it("falha quando quem rejeita não é um supervisor", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacaoAceita();
-    await solicitacaoRepository.save(solicitacao);
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
+      solicitacaoId: solicitacao.id.value,
       supervisorId: "func-c",
       motivo: "Equipe reduzida",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Supervisor não encontrado");
+    assertFail(result, "SUPERVISOR_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Supervisor não encontrado");
   });
 
   it("falha quando a solicitação não existe", async () => {
     const { supervisorRepository, useCase } = criarSut();
     const supervisor = criarSupervisor();
-    await supervisorRepository.save(supervisor);
+    await supervisorRepository.create(supervisor);
 
     const result = await useCase.execute({
       solicitacaoId: "solicitacao-inexistente",
-      supervisorId: supervisor.id,
+      supervisorId: supervisor.id.value,
       motivo: "Equipe reduzida",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Solicitação não encontrada");
+    assertFail(result, "SOLICITACAO_NAO_ENCONTRADA");
+    expect(result.error.message).toBe("Solicitação não encontrada");
   });
 
   it("falha quando o motivo está vazio", async () => {
     const { supervisorRepository, solicitacaoRepository, useCase } = criarSut();
     const supervisor = criarSupervisor();
-    await supervisorRepository.save(supervisor);
+    await supervisorRepository.create(supervisor);
     const solicitacao = criarSolicitacaoAceita();
-    await solicitacaoRepository.save(solicitacao);
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
-      supervisorId: supervisor.id,
+      solicitacaoId: solicitacao.id.value,
+      supervisorId: supervisor.id.value,
       motivo: "",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Motivo da rejeição não pode ser vazio");
+    assertFail(result, "MOTIVO_OBRIGATORIO");
+    expect(result.error.message).toBe("Motivo da rejeição não pode ser vazio");
   });
 
   it("falha quando o destinatário ainda não aceitou", async () => {
     const { supervisorRepository, solicitacaoRepository, useCase } = criarSut();
     const supervisor = criarSupervisor();
-    await supervisorRepository.save(supervisor);
+    await supervisorRepository.create(supervisor);
     const solicitacao = SolicitacaoTrocaTurno.create({
       turno: Turno.create({
         data: "2026-09-24",
         horaInicio: "08:00",
         horaFim: "12:00",
         funcionarioId: "func-a",
-      }).getValue(),
-      solicitanteId: "func-a",
-      destinatarioId: "func-b",
-    }).getValue();
-    await solicitacaoRepository.save(solicitacao);
+      }).unwrap(),
+      solicitanteId: funcionarioId("func-a"),
+      destinatarioId: funcionarioId("func-b"),
+    }).unwrap();
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
-      supervisorId: supervisor.id,
+      solicitacaoId: solicitacao.id.value,
+      supervisorId: supervisor.id.value,
       motivo: "Equipe reduzida",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Não é possível rejeitar uma solicitação pendente");
+    assertFail(result, "TRANSICAO_INVALIDA");
+    expect(result.error.message).toBe("Não é possível rejeitar uma solicitação pendente");
   });
 
   it("falha quando a solicitação já foi cancelada", async () => {
     const { supervisorRepository, solicitacaoRepository, useCase } = criarSut();
     const supervisor = criarSupervisor();
-    await supervisorRepository.save(supervisor);
+    await supervisorRepository.create(supervisor);
     const solicitacao = criarSolicitacaoAceita();
-    await solicitacaoRepository.save(solicitacao);
-    solicitacao.cancelar();
+    await solicitacaoRepository.create(solicitacao);
+    solicitacao.cancelar().unwrap();
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
-      supervisorId: supervisor.id,
+      solicitacaoId: solicitacao.id.value,
+      supervisorId: supervisor.id.value,
       motivo: "Equipe reduzida",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Não é possível rejeitar uma solicitação cancelada");
+    assertFail(result, "TRANSICAO_INVALIDA");
+    expect(result.error.message).toBe("Não é possível rejeitar uma solicitação cancelada");
   });
 });

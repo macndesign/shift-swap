@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
+import { funcionarioId } from "../../__tests__/fixtures";
 import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { Turno } from "../../entities/turno.entity";
 import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
@@ -19,18 +21,18 @@ describe("BuscarSolicitacaoTrocaTurnoPorIdUseCase", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
+    }).unwrap();
     const solicitacao = SolicitacaoTrocaTurno.create({
       turno,
-      solicitanteId: "func-a",
-      destinatarioId: "func-b",
-    }).getValue();
-    await solicitacaoRepository.save(solicitacao);
+      solicitanteId: funcionarioId("func-a"),
+      destinatarioId: funcionarioId("func-b"),
+    }).unwrap();
+    await solicitacaoRepository.create(solicitacao);
 
-    const result = await useCase.execute({ id: solicitacao.id });
+    const result = await useCase.execute({ id: solicitacao.id.value });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toBe(solicitacao);
+    assertOk(result);
+    expect(result.value).toBe(solicitacao);
   });
 
   it("falha quando a solicitação não existe", async () => {
@@ -38,7 +40,7 @@ describe("BuscarSolicitacaoTrocaTurnoPorIdUseCase", () => {
 
     const result = await useCase.execute({ id: "solicitacao-inexistente" });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Solicitação não encontrada");
+    assertFail(result, "SOLICITACAO_NAO_ENCONTRADA");
+    expect(result.error.message).toBe("Solicitação não encontrada");
   });
 });

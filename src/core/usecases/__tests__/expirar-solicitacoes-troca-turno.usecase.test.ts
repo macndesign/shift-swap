@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
+import { AGORA, funcionarioId } from "../../__tests__/fixtures";
 import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { Turno } from "../../entities/turno.entity";
 import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
@@ -10,13 +12,13 @@ function criarSolicitacao(data: string, horaInicio = "08:00") {
     horaInicio,
     horaFim: "18:00",
     funcionarioId: "func-a",
-  }).getValue();
+  }).unwrap();
 
   return SolicitacaoTrocaTurno.create({
     turno,
-    solicitanteId: "func-a",
-    destinatarioId: "func-b",
-  }).getValue();
+    solicitanteId: funcionarioId("func-a"),
+    destinatarioId: funcionarioId("func-b"),
+  }).unwrap();
 }
 
 function criarSut() {
@@ -31,13 +33,13 @@ describe("ExpirarSolicitacoesTrocaTurnoUseCase", () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const jaComecou = criarSolicitacao("2026-09-24", "08:00");
     const futura = criarSolicitacao("2026-09-24", "14:00");
-    await solicitacaoRepository.save(jaComecou);
-    await solicitacaoRepository.save(futura);
+    await solicitacaoRepository.create(jaComecou);
+    await solicitacaoRepository.create(futura);
 
     const result = await useCase.execute({ referencia: "2026-09-24T09:00" });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toEqual([jaComecou]);
+    assertOk(result);
+    expect(result.value).toEqual([jaComecou]);
     expect(jaComecou.status).toBe("expirada");
     expect(futura.status).toBe("pendente");
   });
@@ -45,38 +47,41 @@ describe("ExpirarSolicitacoesTrocaTurnoUseCase", () => {
   it("expira também as que já foram aceitas e ainda aguardam aprovação", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const aguardando = criarSolicitacao("2026-09-24", "08:00");
-    aguardando.aceitar({ funcionarioId: "func-b" });
-    await solicitacaoRepository.save(aguardando);
+    aguardando.aceitar({ funcionarioId: funcionarioId("func-b"), agora: AGORA }).unwrap();
+    await solicitacaoRepository.create(aguardando);
 
     const result = await useCase.execute({ referencia: "2026-09-24T09:00" });
 
-    expect(result.getValue()).toEqual([aguardando]);
+    assertOk(result);
+    expect(result.value).toEqual([aguardando]);
     expect(aguardando.status).toBe("expirada");
-    expect(aguardando.turno.funcionarioId).toBe("func-a");
+    expect(aguardando.turno.funcionarioId.value).toBe("func-a");
   });
 
   it("expira quando o turno começa exatamente na referência", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao("2026-09-24", "08:00");
-    await solicitacaoRepository.save(solicitacao);
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({ referencia: "2026-09-24T08:00" });
 
-    expect(result.getValue()).toEqual([solicitacao]);
+    assertOk(result);
+    expect(result.value).toEqual([solicitacao]);
   });
 
   it("não altera solicitações que já foram encerradas", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const cancelada = criarSolicitacao("2026-09-20");
-    cancelada.cancelar();
+    cancelada.cancelar().unwrap();
     const recusada = criarSolicitacao("2026-09-20");
-    recusada.recusar({ funcionarioId: "func-b" });
-    await solicitacaoRepository.save(cancelada);
-    await solicitacaoRepository.save(recusada);
+    recusada.recusar({ funcionarioId: funcionarioId("func-b"), agora: AGORA }).unwrap();
+    await solicitacaoRepository.create(cancelada);
+    await solicitacaoRepository.create(recusada);
 
     const result = await useCase.execute({ referencia: "2026-09-24T09:00" });
 
-    expect(result.getValue()).toEqual([]);
+    assertOk(result);
+    expect(result.value).toEqual([]);
     expect(cancelada.status).toBe("cancelada");
     expect(recusada.status).toBe("recusada");
   });
@@ -86,7 +91,7 @@ describe("ExpirarSolicitacoesTrocaTurnoUseCase", () => {
 
     const result = await useCase.execute({ referencia: "24/09/2026" });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Referência inválida: 24/09/2026");
+    assertFail(result, "REFERENCIA_INVALIDA");
+    expect(result.error.message).toBe("Referência inválida: 24/09/2026");
   });
 });

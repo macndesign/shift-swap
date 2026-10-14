@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
 import { SupervisorEntity } from "../../entities/supervisor.entity";
 import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository";
 import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
@@ -16,8 +17,8 @@ async function criarSupervisor(repository: SupervisorInMemoryRepository) {
   const supervisor = SupervisorEntity.create({
     name: "Sup Visor",
     email: "sup@empresa.com",
-  }).getValue();
-  await repository.save(supervisor);
+  }).unwrap();
+  await repository.create(supervisor);
   return supervisor;
 }
 
@@ -31,12 +32,12 @@ describe("CriarTurnoUseCase", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-      supervisorId: supervisor.id,
+      supervisorId: supervisor.id.value,
     });
 
-    expect(result.isSuccess).toBe(true);
-    const turno = result.getValue();
-    expect(turno.funcionarioId).toBe("func-a");
+    assertOk(result);
+    const turno = result.value;
+    expect(turno.funcionarioId.value).toBe("func-a");
     expect(await turnoRepository.findById(turno.id)).toBe(turno);
   });
 
@@ -49,11 +50,11 @@ describe("CriarTurnoUseCase", () => {
       horaInicio: "12:00",
       horaFim: "08:00",
       funcionarioId: "func-a",
-      supervisorId: supervisor.id,
+      supervisorId: supervisor.id.value,
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Hora de fim deve ser depois da hora de início");
+    assertFail(result, "HORARIO_INVALIDO");
+    expect(result.error.message).toBe("Hora de fim deve ser depois da hora de início");
   });
 
   it("falha quando o supervisor não existe", async () => {
@@ -67,8 +68,8 @@ describe("CriarTurnoUseCase", () => {
       supervisorId: "sup-inexistente",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Supervisor não encontrado");
+    assertFail(result, "SUPERVISOR_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Supervisor não encontrado");
     expect(await turnoRepository.findAll()).toHaveLength(0);
   });
 });

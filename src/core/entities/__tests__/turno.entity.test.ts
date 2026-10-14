@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
+import { funcionarioId } from "../../__tests__/fixtures";
 import { Turno } from "../turno.entity";
 
 describe("Turno", () => {
@@ -10,12 +12,12 @@ describe("Turno", () => {
       funcionarioId: "func-a",
     });
 
-    expect(result.isSuccess).toBe(true);
-    const turno = result.getValue();
+    assertOk(result);
+    const turno = result.value;
     expect(turno.data).toBe("2026-09-24");
     expect(turno.horaInicio).toBe("08:00");
     expect(turno.horaFim).toBe("12:00");
-    expect(turno.funcionarioId).toBe("func-a");
+    expect(turno.funcionarioId.value).toBe("func-a");
   });
 
   it("falha quando a data tem formato inválido", () => {
@@ -26,8 +28,8 @@ describe("Turno", () => {
       funcionarioId: "func-a",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Data inválida: 24-09-2026");
+    assertFail(result, "DATA_INVALIDA");
+    expect(result.error.message).toBe("Data inválida: 24-09-2026");
   });
 
   it("falha quando a hora de início tem formato inválido", () => {
@@ -38,8 +40,8 @@ describe("Turno", () => {
       funcionarioId: "func-a",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Hora de início inválida: 8h");
+    assertFail(result, "HORA_INICIO_INVALIDA");
+    expect(result.error.message).toBe("Hora de início inválida: 8h");
   });
 
   it("falha quando a hora de fim tem formato inválido", () => {
@@ -50,8 +52,8 @@ describe("Turno", () => {
       funcionarioId: "func-a",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Hora de fim inválida: meio-dia");
+    assertFail(result, "HORA_FIM_INVALIDA");
+    expect(result.error.message).toBe("Hora de fim inválida: meio-dia");
   });
 
   it("falha quando a hora de fim não é depois da hora de início", () => {
@@ -62,8 +64,8 @@ describe("Turno", () => {
       funcionarioId: "func-a",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Hora de fim deve ser depois da hora de início");
+    assertFail(result, "HORARIO_INVALIDO");
+    expect(result.error.message).toBe("Hora de fim deve ser depois da hora de início");
   });
 
   it("falha quando o id do funcionário é vazio", () => {
@@ -74,8 +76,8 @@ describe("Turno", () => {
       funcionarioId: "",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Id do funcionário não pode ser vazio");
+    assertFail(result, "ID_INVALIDO");
+    expect(result.error.message).toBe("funcionarioId inválido");
   });
 
   it("reatribui o turno para outro funcionário", () => {
@@ -84,12 +86,12 @@ describe("Turno", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
+    }).unwrap();
 
-    const result = turno.reatribuir("func-b");
+    const result = turno.reatribuir(funcionarioId("func-b"));
 
-    expect(result.isSuccess).toBe(true);
-    expect(turno.funcionarioId).toBe("func-b");
+    assertOk(result);
+    expect(turno.funcionarioId.value).toBe("func-b");
   });
 
   it("falha ao reatribuir para o mesmo funcionário que já é dono", () => {
@@ -98,11 +100,11 @@ describe("Turno", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
+    }).unwrap();
 
-    const result = turno.reatribuir("func-a");
+    const result = turno.reatribuir(funcionarioId("func-a"));
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("O turno já pertence a esse funcionário");
+    assertFail(result, "TURNO_JA_PERTENCE_AO_FUNCIONARIO");
+    expect(result.error.message).toBe("O turno já pertence a esse funcionário");
   });
 });

@@ -1,16 +1,16 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, Result } from "core-kernel";
 import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
 import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
 
-class ListarSolicitacoesTrocaTurnoUseCase extends UseCase<void, SolicitacaoTrocaTurno[]> {
-  constructor(private readonly solicitacaoRepository: SolicitacaoTrocaTurnoRepository) {
+class ListarSolicitacoesTrocaTurnoUseCase extends BaseUseCase<void, SolicitacaoTrocaTurno[]> {
+  constructor(
+    private readonly solicitacaoRepository: Pick<SolicitacaoTrocaTurnoRepository, "findAll">,
+  ) {
     super();
   }
 
-  async execute(): Promise<Result<SolicitacaoTrocaTurno[]>> {
-    const solicitacoes = await this.solicitacaoRepository.findAll();
-    return Result.ok<SolicitacaoTrocaTurno[]>(solicitacoes);
+  protected async handle(): Promise<Result<SolicitacaoTrocaTurno[], never>> {
+    return Result.ok(await this.solicitacaoRepository.findAll());
   }
 }
 

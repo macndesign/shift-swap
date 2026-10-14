@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
 import { Turno } from "../../entities/turno.entity";
 import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
 import { BuscarTurnoPorIdUseCase } from "../buscar-turno-por-id.usecase";
@@ -18,13 +19,13 @@ describe("BuscarTurnoPorIdUseCase", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
-    await turnoRepository.save(turno);
+    }).unwrap();
+    await turnoRepository.create(turno);
 
-    const result = await useCase.execute({ id: turno.id });
+    const result = await useCase.execute({ id: turno.id.value });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toBe(turno);
+    assertOk(result);
+    expect(result.value).toBe(turno);
   });
 
   it("falha quando o turno não existe", async () => {
@@ -32,7 +33,7 @@ describe("BuscarTurnoPorIdUseCase", () => {
 
     const result = await useCase.execute({ id: "turno-inexistente" });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Turno não encontrado");
+    assertFail(result, "TURNO_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Turno não encontrado");
   });
 });

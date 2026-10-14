@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
 import { SupervisorEntity } from "../../entities/supervisor.entity";
 import { Turno } from "../../entities/turno.entity";
 import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository";
@@ -17,8 +18,8 @@ async function criarSupervisor(repository: SupervisorInMemoryRepository) {
   const supervisor = SupervisorEntity.create({
     name: "Sup Visor",
     email: "sup@empresa.com",
-  }).getValue();
-  await repository.save(supervisor);
+  }).unwrap();
+  await repository.create(supervisor);
   return supervisor;
 }
 
@@ -31,12 +32,15 @@ describe("RemoverTurnoUseCase", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
-    await turnoRepository.save(turno);
+    }).unwrap();
+    await turnoRepository.create(turno);
 
-    const result = await useCase.execute({ supervisorId: supervisor.id, id: turno.id });
+    const result = await useCase.execute({
+      supervisorId: supervisor.id.value,
+      id: turno.id.value,
+    });
 
-    expect(result.isSuccess).toBe(true);
+    assertOk(result);
     expect(await turnoRepository.findById(turno.id)).toBeNull();
   });
 
@@ -44,10 +48,13 @@ describe("RemoverTurnoUseCase", () => {
     const { supervisorRepository, useCase } = criarSut();
     const supervisor = await criarSupervisor(supervisorRepository);
 
-    const result = await useCase.execute({ supervisorId: supervisor.id, id: "turno-inexistente" });
+    const result = await useCase.execute({
+      supervisorId: supervisor.id.value,
+      id: "turno-inexistente",
+    });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Turno não encontrado");
+    assertFail(result, "TURNO_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Turno não encontrado");
   });
 
   it("falha quando o supervisor não existe e não remove o turno", async () => {
@@ -57,13 +64,13 @@ describe("RemoverTurnoUseCase", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
-    await turnoRepository.save(turno);
+    }).unwrap();
+    await turnoRepository.create(turno);
 
-    const result = await useCase.execute({ supervisorId: "sup-inexistente", id: turno.id });
+    const result = await useCase.execute({ supervisorId: "sup-inexistente", id: turno.id.value });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Supervisor não encontrado");
+    assertFail(result, "SUPERVISOR_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Supervisor não encontrado");
     expect(await turnoRepository.findById(turno.id)).toBe(turno);
   });
 });

@@ -1,5 +1,5 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, Result, type ValidationError } from "core-kernel";
+import { FuncionarioId, idDoCampo } from "../entities/ids";
 import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
 import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
 
@@ -7,23 +7,30 @@ interface ListarSolicitacoesRecebidasTrocaTurnoInput {
   funcionarioId: string;
 }
 
-/** Pedidos de troca endereçados ao funcionário que ainda aguardam a resposta dele. */
-class ListarSolicitacoesRecebidasTrocaTurnoUseCase extends UseCase<
+/** Pedidos `pendente` endereçados ao funcionário, à espera da resposta dele. */
+class ListarSolicitacoesRecebidasTrocaTurnoUseCase extends BaseUseCase<
   ListarSolicitacoesRecebidasTrocaTurnoInput,
-  SolicitacaoTrocaTurno[]
+  SolicitacaoTrocaTurno[],
+  ValidationError
 > {
-  constructor(private readonly solicitacaoRepository: SolicitacaoTrocaTurnoRepository) {
+  constructor(
+    private readonly solicitacaoRepository: Pick<
+      SolicitacaoTrocaTurnoRepository,
+      "findPendentesByDestinatarioId"
+    >,
+  ) {
     super();
   }
 
-  async execute(
+  protected async handle(
     input: ListarSolicitacoesRecebidasTrocaTurnoInput,
-  ): Promise<Result<SolicitacaoTrocaTurno[]>> {
-    const solicitacoes = await this.solicitacaoRepository.findPendentesByDestinatarioId(
-      input.funcionarioId,
-    );
+  ): Promise<Result<SolicitacaoTrocaTurno[], ValidationError>> {
+    const funcionarioId = idDoCampo(FuncionarioId.from(input.funcionarioId), "funcionarioId");
+    if (funcionarioId.isFail()) return funcionarioId;
 
-    return Result.ok<SolicitacaoTrocaTurno[]>(solicitacoes);
+    return Result.ok(
+      await this.solicitacaoRepository.findPendentesByDestinatarioId(funcionarioId.value),
+    );
   }
 }
 

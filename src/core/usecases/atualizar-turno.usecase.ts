@@ -1,6 +1,7 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
+import { idDoCampo, SupervisorId, TurnoId } from "../entities/ids";
 import type { Turno } from "../entities/turno.entity";
+import { naoEncontrado } from "../erros";
 import type { SupervisorRepository } from "../ports/supervisor.repository";
 import type { TurnoRepository } from "../ports/turno.repository";
 
@@ -12,38 +13,40 @@ interface AtualizarTurnoInput {
   horaFim: string;
 }
 
-/** Só o supervisor altera o horário de um turno. */
-class AtualizarTurnoUseCase extends UseCase<AtualizarTurnoInput, Turno> {
+type Erro = ValidationError | NotFoundError;
+
+/** Só o supervisor altera turnos. */
+class AtualizarTurnoUseCase extends BaseUseCase<AtualizarTurnoInput, Turno, Erro> {
   constructor(
-    private readonly supervisorRepository: SupervisorRepository,
-    private readonly turnoRepository: TurnoRepository,
+    private readonly supervisorRepository: Pick<SupervisorRepository, "findById">,
+    private readonly turnoRepository: Pick<TurnoRepository, "findById" | "update">,
   ) {
     super();
   }
 
-  async execute(input: AtualizarTurnoInput): Promise<Result<Turno>> {
-    const supervisor = await this.supervisorRepository.findById(input.supervisorId);
-    if (!supervisor) {
-      return Result.fail<Turno>("Supervisor não encontrado");
-    }
+  protected async handle(input: AtualizarTurnoInput): Promise<Result<Turno, Erro>> {
+    const ids = Result.combine([
+      idDoCampo(SupervisorId.from(input.supervisorId), "supervisorId"),
+      idDoCampo(TurnoId.from(input.id), "id"),
+    ]);
+    if (ids.isFail()) return ids;
+    const [supervisorId, turnoId] = ids.value;
 
-    const turno = await this.turnoRepository.findById(input.id);
-    if (!turno) {
-      return Result.fail<Turno>("Turno não encontrado");
+    if (!(await this.supervisorRepository.findById(supervisorId))) {
+      return Result.fail(naoEncontrado.supervisor());
     }
+    const turno = await this.turnoRepository.findById(turnoId);
+    if (!turno) return Result.fail(naoEncontrado.turno());
 
-    const atualizarOrError = turno.atualizarHorario({
+    const atualizado = turno.atualizarHorario({
       data: input.data,
       horaInicio: input.horaInicio,
       horaFim: input.horaFim,
     });
-    if (atualizarOrError.isFailure) {
-      return Result.fail<Turno>(atualizarOrError.error as string | Error);
-    }
+    if (atualizado.isFail()) return atualizado;
 
     await this.turnoRepository.update(turno);
-
-    return Result.ok<Turno>(turno);
+    return Result.ok(turno);
   }
 }
 

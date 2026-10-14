@@ -27,18 +27,19 @@
   "author": "macndesign <macndesign@gmail.com>",
   "scripts": {
     "build": "bun run build:esm && bun run build:cjs && bun run build:types",
-    "build:esm": "bun build ./src/index.ts --outdir ./dist --target node --format esm",
-    "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs",
+    "build:esm": "bun build ./src/index.ts --outdir ./dist --target node --format esm --packages external",
+    "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs --packages external",
     "build:types": "tsc -p tsconfig.build.json",
     "test": "bun test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "postinstall": "simple-git-hooks"
+    "prepare": "node scripts/prepare.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
     "bun-types": "^1.4.2",
+    "core-kernel": "^0.1.0",
     "lint-staged": "^17.5.1",
     "simple-git-hooks": "^2.14.0",
     "typescript": "^5"
@@ -50,5 +51,8 @@
     "*.{ts,tsx,json}": [
       "biome check --write --no-errors-on-unmatched"
     ]
+  },
+  "peerDependencies": {
+    "core-kernel": "^0.1.0"
   }
 }

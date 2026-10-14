@@ -1,5 +1,6 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
+import { idDoCampo, SupervisorId, TurnoId } from "../entities/ids";
+import { naoEncontrado } from "../erros";
 import type { SupervisorRepository } from "../ports/supervisor.repository";
 import type { TurnoRepository } from "../ports/turno.repository";
 
@@ -8,29 +9,34 @@ interface RemoverTurnoInput {
   id: string;
 }
 
+type Erro = ValidationError | NotFoundError;
+
 /** Só o supervisor exclui turnos. */
-class RemoverTurnoUseCase extends UseCase<RemoverTurnoInput, void> {
+class RemoverTurnoUseCase extends BaseUseCase<RemoverTurnoInput, void, Erro> {
   constructor(
-    private readonly supervisorRepository: SupervisorRepository,
-    private readonly turnoRepository: TurnoRepository,
+    private readonly supervisorRepository: Pick<SupervisorRepository, "findById">,
+    private readonly turnoRepository: Pick<TurnoRepository, "findById" | "delete">,
   ) {
     super();
   }
 
-  async execute(input: RemoverTurnoInput): Promise<Result<void>> {
-    const supervisor = await this.supervisorRepository.findById(input.supervisorId);
-    if (!supervisor) {
-      return Result.fail<void>("Supervisor não encontrado");
+  protected async handle(input: RemoverTurnoInput): Promise<Result<void, Erro>> {
+    const ids = Result.combine([
+      idDoCampo(SupervisorId.from(input.supervisorId), "supervisorId"),
+      idDoCampo(TurnoId.from(input.id), "id"),
+    ]);
+    if (ids.isFail()) return ids;
+    const [supervisorId, turnoId] = ids.value;
+
+    if (!(await this.supervisorRepository.findById(supervisorId))) {
+      return Result.fail(naoEncontrado.supervisor());
+    }
+    if (!(await this.turnoRepository.findById(turnoId))) {
+      return Result.fail(naoEncontrado.turno());
     }
 
-    const turno = await this.turnoRepository.findById(input.id);
-    if (!turno) {
-      return Result.fail<void>("Turno não encontrado");
-    }
-
-    await this.turnoRepository.delete(input.id);
-
-    return Result.ok<void>();
+    await this.turnoRepository.delete(turnoId);
+    return Result.ok();
   }
 }
 

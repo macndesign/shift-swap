@@ -1,8 +1,10 @@
-import { Repository } from "../../shared/repository";
+import type { CrudRepository } from "core-kernel";
+import type { FuncionarioId } from "../entities/ids";
 import type { Turno } from "../entities/turno.entity";
 
-abstract class TurnoRepository extends Repository<Turno> {
-  abstract findByFuncionarioIdAndData(funcionarioId: string, data: string): Promise<Turno[]>;
+interface TurnoRepository extends CrudRepository<Turno> {
+  findAll(): Promise<Turno[]>;
+  findByFuncionarioIdAndData(funcionarioId: FuncionarioId, data: string): Promise<Turno[]>;
 }
 
-export { TurnoRepository };
+export type { TurnoRepository };

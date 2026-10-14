@@ -1,6 +1,9 @@
-import { Repository } from "../../shared/repository";
+import type { CrudRepository } from "core-kernel";
 import type { FuncionarioEntity } from "../entities/funcionario.entity";
 
-abstract class FuncionarioRepository extends Repository<FuncionarioEntity> {}
+/** Falha de infraestrutura é exceção (o use case converte em erro `UNEXPECTED`). */
+interface FuncionarioRepository extends CrudRepository<FuncionarioEntity> {
+  findAll(): Promise<FuncionarioEntity[]>;
+}
 
-export { FuncionarioRepository };
+export type { FuncionarioRepository };

@@ -1,6 +1,14 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import {
+  BaseUseCase,
+  ConflictError,
+  type ForbiddenError,
+  type NotFoundError,
+  Result,
+  type ValidationError,
+} from "core-kernel";
+import { FuncionarioId, idDoCampo, TurnoId } from "../entities/ids";
 import { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
+import { CODIGOS_ERRO, naoEncontrado } from "../erros";
 import type { FuncionarioRepository } from "../ports/funcionario.repository";
 import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
 import type { TurnoRepository } from "../ports/turno.repository";
@@ -11,46 +19,56 @@ interface SolicitarTrocaTurnoInput {
   destinatarioId: string;
 }
 
-class SolicitarTrocaTurnoUseCase extends UseCase<SolicitarTrocaTurnoInput, SolicitacaoTrocaTurno> {
+type Erro = ValidationError | NotFoundError | ConflictError | ForbiddenError;
+
+class SolicitarTrocaTurnoUseCase extends BaseUseCase<
+  SolicitarTrocaTurnoInput,
+  SolicitacaoTrocaTurno,
+  Erro
+> {
   constructor(
-    private readonly turnoRepository: TurnoRepository,
-    private readonly funcionarioRepository: FuncionarioRepository,
-    private readonly solicitacaoRepository: SolicitacaoTrocaTurnoRepository,
+    private readonly turnoRepository: Pick<TurnoRepository, "findById">,
+    private readonly funcionarioRepository: Pick<FuncionarioRepository, "findById">,
+    private readonly solicitacaoRepository: Pick<
+      SolicitacaoTrocaTurnoRepository,
+      "create" | "findEmAbertoByTurnoId"
+    >,
   ) {
     super();
   }
 
-  async execute(input: SolicitarTrocaTurnoInput): Promise<Result<SolicitacaoTrocaTurno>> {
-    const turno = await this.turnoRepository.findById(input.turnoId);
-    if (!turno) {
-      return Result.fail<SolicitacaoTrocaTurno>("Turno não encontrado");
-    }
+  protected async handle(
+    input: SolicitarTrocaTurnoInput,
+  ): Promise<Result<SolicitacaoTrocaTurno, Erro>> {
+    const ids = Result.combine([
+      idDoCampo(TurnoId.from(input.turnoId), "turnoId"),
+      idDoCampo(FuncionarioId.from(input.solicitanteId), "solicitanteId"),
+      idDoCampo(FuncionarioId.from(input.destinatarioId), "destinatarioId"),
+    ]);
+    if (ids.isFail()) return ids;
+    const [turnoId, solicitanteId, destinatarioId] = ids.value;
 
-    const destinatario = await this.funcionarioRepository.findById(input.destinatarioId);
-    if (!destinatario) {
-      return Result.fail<SolicitacaoTrocaTurno>("Funcionário não encontrado");
+    const turno = await this.turnoRepository.findById(turnoId);
+    if (!turno) return Result.fail(naoEncontrado.turno());
+
+    if (!(await this.funcionarioRepository.findById(destinatarioId))) {
+      return Result.fail(naoEncontrado.funcionario());
     }
 
     const emAberto = await this.solicitacaoRepository.findEmAbertoByTurnoId(turno.id);
     if (emAberto.length > 0) {
-      return Result.fail<SolicitacaoTrocaTurno>(
-        "Já existe uma solicitação em aberto para esse turno",
+      return Result.fail(
+        new ConflictError("Já existe uma solicitação em aberto para esse turno", {
+          code: CODIGOS_ERRO.SOLICITACAO_EM_ABERTO_EXISTENTE,
+        }),
       );
     }
 
-    const solicitacaoOrError = SolicitacaoTrocaTurno.create({
-      turno,
-      solicitanteId: input.solicitanteId,
-      destinatarioId: input.destinatarioId,
-    });
-    if (solicitacaoOrError.isFailure) {
-      return Result.fail<SolicitacaoTrocaTurno>(solicitacaoOrError.error as string | Error);
-    }
+    const solicitacao = SolicitacaoTrocaTurno.create({ turno, solicitanteId, destinatarioId });
+    if (solicitacao.isFail()) return solicitacao;
 
-    const solicitacao = solicitacaoOrError.getValue();
-    await this.solicitacaoRepository.save(solicitacao);
-
-    return Result.ok<SolicitacaoTrocaTurno>(solicitacao);
+    await this.solicitacaoRepository.create(solicitacao.value);
+    return Result.ok(solicitacao.value);
   }
 }
 

@@ -1,5 +1,5 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, Result, type ValidationError } from "core-kernel";
+import { FuncionarioId, idDoCampo } from "../entities/ids";
 import type { Turno } from "../entities/turno.entity";
 import type { TurnoRepository } from "../ports/turno.repository";
 
@@ -8,21 +8,26 @@ interface ListarTurnosPorFuncionarioEDataInput {
   data: string;
 }
 
-class ListarTurnosPorFuncionarioEDataUseCase extends UseCase<
+class ListarTurnosPorFuncionarioEDataUseCase extends BaseUseCase<
   ListarTurnosPorFuncionarioEDataInput,
-  Turno[]
+  Turno[],
+  ValidationError
 > {
-  constructor(private readonly turnoRepository: TurnoRepository) {
+  constructor(
+    private readonly turnoRepository: Pick<TurnoRepository, "findByFuncionarioIdAndData">,
+  ) {
     super();
   }
 
-  async execute(input: ListarTurnosPorFuncionarioEDataInput): Promise<Result<Turno[]>> {
-    const turnos = await this.turnoRepository.findByFuncionarioIdAndData(
-      input.funcionarioId,
-      input.data,
-    );
+  protected async handle(
+    input: ListarTurnosPorFuncionarioEDataInput,
+  ): Promise<Result<Turno[], ValidationError>> {
+    const funcionarioId = idDoCampo(FuncionarioId.from(input.funcionarioId), "funcionarioId");
+    if (funcionarioId.isFail()) return funcionarioId;
 
-    return Result.ok<Turno[]>(turnos);
+    return Result.ok(
+      await this.turnoRepository.findByFuncionarioIdAndData(funcionarioId.value, input.data),
+    );
   }
 }
 

@@ -1,6 +1,9 @@
-import { Repository } from "../../shared/repository";
+import type { CreateRepository, FindByIdRepository } from "core-kernel";
 import type { SupervisorEntity } from "../entities/supervisor.entity";
 
-abstract class SupervisorRepository extends Repository<SupervisorEntity> {}
+/** Só o que os use cases usam hoje: criar e buscar por id. */
+interface SupervisorRepository
+  extends CreateRepository<SupervisorEntity>,
+    FindByIdRepository<SupervisorEntity> {}
 
-export { SupervisorRepository };
+export type { SupervisorRepository };

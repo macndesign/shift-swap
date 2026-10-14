@@ -1,6 +1,6 @@
-import { Entity } from "../../shared/entity";
-import { Result } from "../../shared/result";
+import { Entity, Result, UniqueId, type ValidationError } from "core-kernel";
 import { EmailVO } from "./email.vo";
+import { idDoCampo } from "./ids";
 import { NameVO } from "./name.vo";
 
 interface PessoaProps {
@@ -13,8 +13,9 @@ interface CreatePessoaProps {
   email: string;
 }
 
-class PessoaEntity extends Entity<PessoaProps> {
-  protected constructor(props: PessoaProps, id?: string) {
+/** Base dos tipos de pessoa (funcionário, supervisor). `Id` é o id tipado de cada um. */
+class PessoaEntity<Id extends UniqueId = UniqueId> extends Entity<PessoaProps, Id> {
+  protected constructor(props: PessoaProps, id: Id) {
     super(props, id);
   }
 
@@ -26,35 +27,38 @@ class PessoaEntity extends Entity<PessoaProps> {
     return this.props.email;
   }
 
-  atualizarDados(props: CreatePessoaProps): Result<void> {
-    const propsOrError = PessoaEntity.buildProps(props);
-    if (propsOrError.isFailure) {
-      return Result.fail<void>(propsOrError.error as string | Error);
-    }
+  atualizarDados(props: CreatePessoaProps): Result<void, ValidationError> {
+    const validadas = PessoaEntity.buildProps(props);
+    if (validadas.isFail()) return validadas;
 
-    this.props = propsOrError.getValue();
-    return Result.ok<void>();
+    this.props.name = validadas.value.name;
+    this.props.email = validadas.value.email;
+    return Result.ok();
   }
 
-  protected static buildProps(props: CreatePessoaProps): Result<PessoaProps> {
-    const nameOrError = NameVO.create(props.name);
-    const emailOrError = EmailVO.create(props.email);
-
-    const combined = Result.combine([nameOrError, emailOrError]);
-    if (combined.isFailure) {
-      return Result.fail<PessoaProps>(combined.error as string | Error);
-    }
-
-    return Result.ok<PessoaProps>({ name: nameOrError.getValue(), email: emailOrError.getValue() });
+  /** Valida nome e e-mail juntos: devolve as issues dos dois campos de uma vez. */
+  protected static buildProps(props: CreatePessoaProps): Result<PessoaProps, ValidationError> {
+    return Result.combine([NameVO.create(props.name), EmailVO.create(props.email)]).map(
+      ([name, email]) => ({ name, email }),
+    );
   }
 
-  static create(props: CreatePessoaProps, id?: string): Result<PessoaEntity> {
-    const propsOrError = PessoaEntity.buildProps(props);
-    if (propsOrError.isFailure) {
-      return Result.fail<PessoaEntity>(propsOrError.error as string | Error);
-    }
+  /**
+   * Resolve o id: gera um novo ou reaproveita um id externo (ex.: usuário do BetterAuth),
+   * validado pela classe de id da subclasse.
+   */
+  protected static resolverId<I extends UniqueId>(
+    classe: { generate(): I; from(raw: string): Result<I, ValidationError> },
+    id: string | undefined,
+  ): Result<I, ValidationError> {
+    return id === undefined ? Result.ok(classe.generate()) : idDoCampo(classe.from(id), "id");
+  }
 
-    return Result.ok<PessoaEntity>(new PessoaEntity(propsOrError.getValue(), id));
+  static create(props: CreatePessoaProps, id?: string): Result<PessoaEntity, ValidationError> {
+    return Result.combine([
+      PessoaEntity.buildProps(props),
+      PessoaEntity.resolverId(UniqueId, id),
+    ]).map(([pessoaProps, pessoaId]) => new PessoaEntity(pessoaProps, pessoaId));
   }
 }
 

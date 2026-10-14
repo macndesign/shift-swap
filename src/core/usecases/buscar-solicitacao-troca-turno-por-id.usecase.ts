@@ -1,29 +1,34 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
+import { idDoCampo, SolicitacaoTrocaTurnoId } from "../entities/ids";
 import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
+import { naoEncontrado } from "../erros";
 import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
 
 interface BuscarSolicitacaoTrocaTurnoPorIdInput {
   id: string;
 }
 
-class BuscarSolicitacaoTrocaTurnoPorIdUseCase extends UseCase<
+type Erro = ValidationError | NotFoundError;
+
+class BuscarSolicitacaoTrocaTurnoPorIdUseCase extends BaseUseCase<
   BuscarSolicitacaoTrocaTurnoPorIdInput,
-  SolicitacaoTrocaTurno
+  SolicitacaoTrocaTurno,
+  Erro
 > {
-  constructor(private readonly solicitacaoRepository: SolicitacaoTrocaTurnoRepository) {
+  constructor(
+    private readonly solicitacaoRepository: Pick<SolicitacaoTrocaTurnoRepository, "findById">,
+  ) {
     super();
   }
 
-  async execute(
+  protected async handle(
     input: BuscarSolicitacaoTrocaTurnoPorIdInput,
-  ): Promise<Result<SolicitacaoTrocaTurno>> {
-    const solicitacao = await this.solicitacaoRepository.findById(input.id);
-    if (!solicitacao) {
-      return Result.fail<SolicitacaoTrocaTurno>("Solicitação não encontrada");
-    }
+  ): Promise<Result<SolicitacaoTrocaTurno, Erro>> {
+    const id = idDoCampo(SolicitacaoTrocaTurnoId.from(input.id), "id");
+    if (id.isFail()) return id;
 
-    return Result.ok<SolicitacaoTrocaTurno>(solicitacao);
+    const solicitacao = await this.solicitacaoRepository.findById(id.value);
+    return solicitacao ? Result.ok(solicitacao) : Result.fail(naoEncontrado.solicitacao());
   }
 }
 

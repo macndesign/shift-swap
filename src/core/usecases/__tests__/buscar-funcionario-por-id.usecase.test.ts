@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
 import { FuncionarioEntity } from "../../entities/funcionario.entity";
 import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
 import { BuscarFuncionarioPorIdUseCase } from "../buscar-funcionario-por-id.usecase";
@@ -16,13 +17,13 @@ describe("BuscarFuncionarioPorIdUseCase", () => {
     const funcionario = FuncionarioEntity.create({
       name: "Maria",
       email: "maria@exemplo.com",
-    }).getValue();
-    await funcionarioRepository.save(funcionario);
+    }).unwrap();
+    await funcionarioRepository.create(funcionario);
 
-    const result = await useCase.execute({ id: funcionario.id });
+    const result = await useCase.execute({ id: funcionario.id.value });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toBe(funcionario);
+    assertOk(result);
+    expect(result.value).toBe(funcionario);
   });
 
   it("falha quando o funcionário não existe", async () => {
@@ -30,7 +31,7 @@ describe("BuscarFuncionarioPorIdUseCase", () => {
 
     const result = await useCase.execute({ id: "funcionario-inexistente" });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Funcionário não encontrado");
+    assertFail(result, "FUNCIONARIO_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Funcionário não encontrado");
   });
 });

@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
+import { AGORA, funcionarioId, relogio } from "../../__tests__/fixtures";
 import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { Turno } from "../../entities/turno.entity";
 import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
@@ -10,18 +12,18 @@ function criarSolicitacao() {
     horaInicio: "08:00",
     horaFim: "12:00",
     funcionarioId: "func-a",
-  }).getValue();
+  }).unwrap();
 
   return SolicitacaoTrocaTurno.create({
     turno,
-    solicitanteId: "func-a",
-    destinatarioId: "func-b",
-  }).getValue();
+    solicitanteId: funcionarioId("func-a"),
+    destinatarioId: funcionarioId("func-b"),
+  }).unwrap();
 }
 
 function criarSut() {
   const solicitacaoRepository = new SolicitacaoTrocaTurnoInMemoryRepository();
-  const useCase = new RecusarTrocaTurnoUseCase(solicitacaoRepository);
+  const useCase = new RecusarTrocaTurnoUseCase(solicitacaoRepository, relogio());
 
   return { solicitacaoRepository, useCase };
 }
@@ -30,31 +32,32 @@ describe("RecusarTrocaTurnoUseCase", () => {
   it("recusa a solicitação pendente e mantém o turno com o solicitante", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao();
-    await solicitacaoRepository.save(solicitacao);
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
+      solicitacaoId: solicitacao.id.value,
       funcionarioId: "func-b",
     });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue().status).toBe("recusada");
-    expect(result.getValue().respondidaEm).toBeInstanceOf(Date);
-    expect(solicitacao.turno.funcionarioId).toBe("func-a");
+    assertOk(result);
+    expect(result.value.status).toBe("recusada");
+    expect(result.value.respondidaEm).toEqual(AGORA);
+    expect(solicitacao.turno.funcionarioId.value).toBe("func-a");
   });
 
   it("guarda o motivo quando informado", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao();
-    await solicitacaoRepository.save(solicitacao);
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
+      solicitacaoId: solicitacao.id.value,
       funcionarioId: "func-b",
       motivo: "Tenho consulta",
     });
 
-    expect(result.getValue().motivo).toBe("Tenho consulta");
+    assertOk(result);
+    expect(result.value.motivo).toBe("Tenho consulta");
   });
 
   it("falha quando a solicitação não existe", async () => {
@@ -65,36 +68,38 @@ describe("RecusarTrocaTurnoUseCase", () => {
       funcionarioId: "func-b",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Solicitação não encontrada");
+    assertFail(result, "SOLICITACAO_NAO_ENCONTRADA");
+    expect(result.error.message).toBe("Solicitação não encontrada");
   });
 
   it("falha quando quem recusa não é o destinatário", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao();
-    await solicitacaoRepository.save(solicitacao);
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
+      solicitacaoId: solicitacao.id.value,
       funcionarioId: "func-c",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Somente o destinatário pode recusar a solicitação");
+    assertFail(result, "SOMENTE_DESTINATARIO");
+    expect(result.error.message).toBe("Somente o destinatário pode recusar a solicitação");
   });
 
   it("falha quando o destinatário já aceitou", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao();
-    await solicitacaoRepository.save(solicitacao);
-    solicitacao.aceitar({ funcionarioId: "func-b" });
+    await solicitacaoRepository.create(solicitacao);
+    solicitacao.aceitar({ funcionarioId: funcionarioId("func-b"), agora: AGORA }).unwrap();
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
+      solicitacaoId: solicitacao.id.value,
       funcionarioId: "func-b",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Não é possível recusar uma solicitação aguardando aprovação");
+    assertFail(result, "TRANSICAO_INVALIDA");
+    expect(result.error.message).toBe(
+      "Não é possível recusar uma solicitação aguardando aprovação",
+    );
   });
 });

@@ -1,29 +1,31 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, Result, type ValidationError } from "core-kernel";
 import { FuncionarioEntity } from "../entities/funcionario.entity";
 import type { FuncionarioRepository } from "../ports/funcionario.repository";
 
 interface CriarFuncionarioInput {
+  /** Id externo opcional (ex.: id do usuário no BetterAuth). */
   id?: string;
   name: string;
   email: string;
 }
 
-class CriarFuncionarioUseCase extends UseCase<CriarFuncionarioInput, FuncionarioEntity> {
-  constructor(private readonly funcionarioRepository: FuncionarioRepository) {
+class CriarFuncionarioUseCase extends BaseUseCase<
+  CriarFuncionarioInput,
+  FuncionarioEntity,
+  ValidationError
+> {
+  constructor(private readonly funcionarioRepository: Pick<FuncionarioRepository, "create">) {
     super();
   }
 
-  async execute(input: CriarFuncionarioInput): Promise<Result<FuncionarioEntity>> {
-    const funcionarioOrError = FuncionarioEntity.create(input, input.id);
-    if (funcionarioOrError.isFailure) {
-      return Result.fail<FuncionarioEntity>(funcionarioOrError.error as string | Error);
-    }
+  protected async handle(
+    input: CriarFuncionarioInput,
+  ): Promise<Result<FuncionarioEntity, ValidationError>> {
+    const funcionario = FuncionarioEntity.create(input, input.id);
+    if (funcionario.isFail()) return funcionario;
 
-    const funcionario = funcionarioOrError.getValue();
-    await this.funcionarioRepository.save(funcionario);
-
-    return Result.ok<FuncionarioEntity>(funcionario);
+    await this.funcionarioRepository.create(funcionario.value);
+    return Result.ok(funcionario.value);
   }
 }
 

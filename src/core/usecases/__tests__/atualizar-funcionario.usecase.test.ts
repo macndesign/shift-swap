@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
 import { FuncionarioEntity } from "../../entities/funcionario.entity";
 import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
 import { AtualizarFuncionarioUseCase } from "../atualizar-funcionario.usecase";
@@ -16,18 +17,18 @@ describe("AtualizarFuncionarioUseCase", () => {
     const funcionario = FuncionarioEntity.create({
       name: "Maria",
       email: "maria@exemplo.com",
-    }).getValue();
-    await funcionarioRepository.save(funcionario);
+    }).unwrap();
+    await funcionarioRepository.create(funcionario);
 
     const result = await useCase.execute({
-      id: funcionario.id,
+      id: funcionario.id.value,
       name: "Maria Silva",
       email: "maria.silva@exemplo.com",
     });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue().name.value).toBe("Maria Silva");
-    expect(result.getValue().email.value).toBe("maria.silva@exemplo.com");
+    assertOk(result);
+    expect(result.value.name.value).toBe("Maria Silva");
+    expect(result.value.email.value).toBe("maria.silva@exemplo.com");
   });
 
   it("falha quando o funcionário não existe", async () => {
@@ -39,8 +40,8 @@ describe("AtualizarFuncionarioUseCase", () => {
       email: "maria.silva@exemplo.com",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Funcionário não encontrado");
+    assertFail(result, "FUNCIONARIO_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Funcionário não encontrado");
   });
 
   it("falha quando os novos dados são inválidos", async () => {
@@ -48,16 +49,16 @@ describe("AtualizarFuncionarioUseCase", () => {
     const funcionario = FuncionarioEntity.create({
       name: "Maria",
       email: "maria@exemplo.com",
-    }).getValue();
-    await funcionarioRepository.save(funcionario);
+    }).unwrap();
+    await funcionarioRepository.create(funcionario);
 
     const result = await useCase.execute({
-      id: funcionario.id,
+      id: funcionario.id.value,
       name: "Al",
       email: "maria@exemplo.com",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Nome deve ter pelo menos 3 caracteres");
+    assertFail(result, "NOME_CURTO");
+    expect(result.error.message).toBe("Nome deve ter pelo menos 3 caracteres");
   });
 });
