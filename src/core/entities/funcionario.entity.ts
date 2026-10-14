@@ -1,18 +1,25 @@
-import { Result } from "../../shared/result";
+import { Result, type ValidationError } from "core-kernel";
+import { FuncionarioId } from "./ids";
 import { type CreatePessoaProps, PessoaEntity, type PessoaProps } from "./pessoa.entity";
 
-class FuncionarioEntity extends PessoaEntity {
-  private constructor(props: PessoaProps, id?: string) {
+class FuncionarioEntity extends PessoaEntity<FuncionarioId> {
+  private constructor(props: PessoaProps, id: FuncionarioId) {
     super(props, id);
   }
 
-  static create(props: CreatePessoaProps, id?: string): Result<FuncionarioEntity> {
-    const propsOrError = FuncionarioEntity.buildProps(props);
-    if (propsOrError.isFailure) {
-      return Result.fail<FuncionarioEntity>(propsOrError.error as string | Error);
-    }
+  static override create(
+    props: CreatePessoaProps,
+    id?: string,
+  ): Result<FuncionarioEntity, ValidationError> {
+    return Result.combine([
+      FuncionarioEntity.buildProps(props),
+      FuncionarioEntity.resolverId<FuncionarioId>(FuncionarioId, id),
+    ]).map(([pessoaProps, funcionarioId]) => new FuncionarioEntity(pessoaProps, funcionarioId));
+  }
 
-    return Result.ok<FuncionarioEntity>(new FuncionarioEntity(propsOrError.getValue(), id));
+  /** Reidratação pelo adapter de repositório: dados já persistidos, sem validação. */
+  static reconstituir(props: PessoaProps, id: FuncionarioId): FuncionarioEntity {
+    return new FuncionarioEntity(props, id);
   }
 }
 

@@ -1,16 +1,14 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, Result } from "core-kernel";
 import type { Turno } from "../entities/turno.entity";
 import type { TurnoRepository } from "../ports/turno.repository";
 
-class ListarTurnosUseCase extends UseCase<void, Turno[]> {
-  constructor(private readonly turnoRepository: TurnoRepository) {
+class ListarTurnosUseCase extends BaseUseCase<void, Turno[]> {
+  constructor(private readonly turnoRepository: Pick<TurnoRepository, "findAll">) {
     super();
   }
 
-  async execute(): Promise<Result<Turno[]>> {
-    const turnos = await this.turnoRepository.findAll();
-    return Result.ok<Turno[]>(turnos);
+  protected async handle(): Promise<Result<Turno[], never>> {
+    return Result.ok(await this.turnoRepository.findAll());
   }
 }
 

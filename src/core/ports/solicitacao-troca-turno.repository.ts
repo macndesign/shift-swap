@@ -1,12 +1,18 @@
-import { Repository } from "../../shared/repository";
+import type { CreateRepository, FindByIdRepository, UpdateRepository } from "core-kernel";
+import type { FuncionarioId, TurnoId } from "../entities/ids";
 import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
 
-abstract class SolicitacaoTrocaTurnoRepository extends Repository<SolicitacaoTrocaTurno> {
+/** Sem delete: solicitações são encerradas por transição, para manter o histórico. */
+interface SolicitacaoTrocaTurnoRepository
+  extends CreateRepository<SolicitacaoTrocaTurno>,
+    UpdateRepository<SolicitacaoTrocaTurno>,
+    FindByIdRepository<SolicitacaoTrocaTurno> {
+  findAll(): Promise<SolicitacaoTrocaTurno[]>;
   /** "Em aberto" = ainda sem desfecho: `pendente` (aguarda o destinatário) ou `aguardando_aprovacao`. */
-  abstract findEmAberto(): Promise<SolicitacaoTrocaTurno[]>;
-  abstract findEmAbertoByTurnoId(turnoId: string): Promise<SolicitacaoTrocaTurno[]>;
+  findEmAberto(): Promise<SolicitacaoTrocaTurno[]>;
+  findEmAbertoByTurnoId(turnoId: TurnoId): Promise<SolicitacaoTrocaTurno[]>;
   /** Solicitações `pendente` endereçadas ao funcionário, à espera da resposta dele. */
-  abstract findPendentesByDestinatarioId(destinatarioId: string): Promise<SolicitacaoTrocaTurno[]>;
+  findPendentesByDestinatarioId(destinatarioId: FuncionarioId): Promise<SolicitacaoTrocaTurno[]>;
 }
 
-export { SolicitacaoTrocaTurnoRepository };
+export type { SolicitacaoTrocaTurnoRepository };

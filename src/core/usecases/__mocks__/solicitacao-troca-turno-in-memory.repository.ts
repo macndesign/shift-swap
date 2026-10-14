@@ -1,47 +1,35 @@
+import { InMemoryRepository } from "core-kernel/testing";
+import type { FuncionarioId, TurnoId } from "../../entities/ids";
 import type { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
-import { SolicitacaoTrocaTurnoRepository } from "../../ports/solicitacao-troca-turno.repository";
+import type { SolicitacaoTrocaTurnoRepository } from "../../ports/solicitacao-troca-turno.repository";
 
-function emAberto(solicitacao: SolicitacaoTrocaTurno): boolean {
-  return solicitacao.status === "pendente" || solicitacao.status === "aguardando_aprovacao";
-}
+const emAberto = (solicitacao: SolicitacaoTrocaTurno) =>
+  solicitacao.status === "pendente" || solicitacao.status === "aguardando_aprovacao";
 
-class SolicitacaoTrocaTurnoInMemoryRepository extends SolicitacaoTrocaTurnoRepository {
-  private readonly items = new Map<string, SolicitacaoTrocaTurno>();
-
-  async save(entity: SolicitacaoTrocaTurno): Promise<void> {
-    this.items.set(entity.id, entity);
-  }
-
-  async update(entity: SolicitacaoTrocaTurno): Promise<void> {
-    this.items.set(entity.id, entity);
-  }
-
-  async delete(id: string): Promise<void> {
-    this.items.delete(id);
-  }
-
-  async findById(id: string): Promise<SolicitacaoTrocaTurno | null> {
-    return this.items.get(id) ?? null;
-  }
-
+class SolicitacaoTrocaTurnoInMemoryRepository
+  extends InMemoryRepository<SolicitacaoTrocaTurno>
+  implements SolicitacaoTrocaTurnoRepository
+{
   async findAll(): Promise<SolicitacaoTrocaTurno[]> {
-    return Array.from(this.items.values());
+    return this.filter(() => true);
   }
 
   async findEmAberto(): Promise<SolicitacaoTrocaTurno[]> {
-    return Array.from(this.items.values()).filter(emAberto);
+    return this.filter(emAberto);
   }
 
-  async findEmAbertoByTurnoId(turnoId: string): Promise<SolicitacaoTrocaTurno[]> {
-    return Array.from(this.items.values()).filter(
-      (solicitacao) => solicitacao.turno.id === turnoId && emAberto(solicitacao),
+  async findEmAbertoByTurnoId(turnoId: TurnoId): Promise<SolicitacaoTrocaTurno[]> {
+    return this.filter(
+      (solicitacao) => emAberto(solicitacao) && solicitacao.turno.id.equals(turnoId),
     );
   }
 
-  async findPendentesByDestinatarioId(destinatarioId: string): Promise<SolicitacaoTrocaTurno[]> {
-    return Array.from(this.items.values()).filter(
+  async findPendentesByDestinatarioId(
+    destinatarioId: FuncionarioId,
+  ): Promise<SolicitacaoTrocaTurno[]> {
+    return this.filter(
       (solicitacao) =>
-        solicitacao.status === "pendente" && solicitacao.destinatarioId === destinatarioId,
+        solicitacao.status === "pendente" && solicitacao.destinatarioId.equals(destinatarioId),
     );
   }
 }

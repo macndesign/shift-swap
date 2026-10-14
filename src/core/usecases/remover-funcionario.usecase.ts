@@ -1,25 +1,31 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
+import { FuncionarioId, idDoCampo } from "../entities/ids";
+import { naoEncontrado } from "../erros";
 import type { FuncionarioRepository } from "../ports/funcionario.repository";
 
 interface RemoverFuncionarioInput {
   id: string;
 }
 
-class RemoverFuncionarioUseCase extends UseCase<RemoverFuncionarioInput, void> {
-  constructor(private readonly funcionarioRepository: FuncionarioRepository) {
+type Erro = ValidationError | NotFoundError;
+
+class RemoverFuncionarioUseCase extends BaseUseCase<RemoverFuncionarioInput, void, Erro> {
+  constructor(
+    private readonly funcionarioRepository: Pick<FuncionarioRepository, "findById" | "delete">,
+  ) {
     super();
   }
 
-  async execute(input: RemoverFuncionarioInput): Promise<Result<void>> {
-    const funcionario = await this.funcionarioRepository.findById(input.id);
-    if (!funcionario) {
-      return Result.fail<void>("Funcionário não encontrado");
+  protected async handle(input: RemoverFuncionarioInput): Promise<Result<void, Erro>> {
+    const id = idDoCampo(FuncionarioId.from(input.id), "id");
+    if (id.isFail()) return id;
+
+    if (!(await this.funcionarioRepository.findById(id.value))) {
+      return Result.fail(naoEncontrado.funcionario());
     }
 
-    await this.funcionarioRepository.delete(input.id);
-
-    return Result.ok<void>();
+    await this.funcionarioRepository.delete(id.value);
+    return Result.ok();
   }
 }
 

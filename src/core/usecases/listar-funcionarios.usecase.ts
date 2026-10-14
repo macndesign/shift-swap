@@ -1,16 +1,14 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import { BaseUseCase, Result } from "core-kernel";
 import type { FuncionarioEntity } from "../entities/funcionario.entity";
 import type { FuncionarioRepository } from "../ports/funcionario.repository";
 
-class ListarFuncionariosUseCase extends UseCase<void, FuncionarioEntity[]> {
-  constructor(private readonly funcionarioRepository: FuncionarioRepository) {
+class ListarFuncionariosUseCase extends BaseUseCase<void, FuncionarioEntity[]> {
+  constructor(private readonly funcionarioRepository: Pick<FuncionarioRepository, "findAll">) {
     super();
   }
 
-  async execute(): Promise<Result<FuncionarioEntity[]>> {
-    const funcionarios = await this.funcionarioRepository.findAll();
-    return Result.ok<FuncionarioEntity[]>(funcionarios);
+  protected async handle(): Promise<Result<FuncionarioEntity[], never>> {
+    return Result.ok(await this.funcionarioRepository.findAll());
   }
 }
 

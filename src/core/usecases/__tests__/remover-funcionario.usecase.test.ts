@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
 import { FuncionarioEntity } from "../../entities/funcionario.entity";
 import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
 import { RemoverFuncionarioUseCase } from "../remover-funcionario.usecase";
@@ -16,12 +17,12 @@ describe("RemoverFuncionarioUseCase", () => {
     const funcionario = FuncionarioEntity.create({
       name: "Maria",
       email: "maria@exemplo.com",
-    }).getValue();
-    await funcionarioRepository.save(funcionario);
+    }).unwrap();
+    await funcionarioRepository.create(funcionario);
 
-    const result = await useCase.execute({ id: funcionario.id });
+    const result = await useCase.execute({ id: funcionario.id.value });
 
-    expect(result.isSuccess).toBe(true);
+    assertOk(result);
     expect(await funcionarioRepository.findById(funcionario.id)).toBeNull();
   });
 
@@ -30,7 +31,7 @@ describe("RemoverFuncionarioUseCase", () => {
 
     const result = await useCase.execute({ id: "funcionario-inexistente" });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Funcionário não encontrado");
+    assertFail(result, "FUNCIONARIO_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Funcionário não encontrado");
   });
 });

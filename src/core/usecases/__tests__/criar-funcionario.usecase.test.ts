@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
+import { funcionarioId } from "../../__tests__/fixtures";
 import { FuncionarioInMemoryRepository } from "../__mocks__/funcionario-in-memory.repository";
 import { CriarFuncionarioUseCase } from "../criar-funcionario.usecase";
 
@@ -15,8 +17,8 @@ describe("CriarFuncionarioUseCase", () => {
 
     const result = await useCase.execute({ name: "Maria", email: "maria@exemplo.com" });
 
-    expect(result.isSuccess).toBe(true);
-    const funcionario = result.getValue();
+    assertOk(result);
+    const funcionario = result.value;
     expect(funcionario.name.value).toBe("Maria");
     expect(funcionario.email.value).toBe("maria@exemplo.com");
     expect(await funcionarioRepository.findById(funcionario.id)).toBe(funcionario);
@@ -31,9 +33,9 @@ describe("CriarFuncionarioUseCase", () => {
       email: "maria@exemplo.com",
     });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue().id).toBe("auth-user-id");
-    expect(await funcionarioRepository.findById("auth-user-id")).toBe(result.getValue());
+    assertOk(result);
+    expect(result.value.id.value).toBe("auth-user-id");
+    expect(await funcionarioRepository.findById(funcionarioId("auth-user-id"))).toBe(result.value);
   });
 
   it("falha quando o nome é inválido", async () => {
@@ -41,8 +43,8 @@ describe("CriarFuncionarioUseCase", () => {
 
     const result = await useCase.execute({ name: "Al", email: "maria@exemplo.com" });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Nome deve ter pelo menos 3 caracteres");
+    assertFail(result, "NOME_CURTO");
+    expect(result.error.message).toBe("Nome deve ter pelo menos 3 caracteres");
   });
 
   it("falha quando o email é inválido", async () => {
@@ -50,7 +52,7 @@ describe("CriarFuncionarioUseCase", () => {
 
     const result = await useCase.execute({ name: "Maria", email: "email-invalido" });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Email inválido: email-invalido");
+    assertFail(result, "EMAIL_INVALIDO");
+    expect(result.error.message).toBe("Email inválido: email-invalido");
   });
 });

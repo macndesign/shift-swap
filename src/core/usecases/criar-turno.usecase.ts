@@ -1,37 +1,41 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
-import { Turno, type TurnoProps } from "../entities/turno.entity";
+import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
+import { idDoCampo, SupervisorId } from "../entities/ids";
+import { type CriarTurnoProps, Turno } from "../entities/turno.entity";
+import { naoEncontrado } from "../erros";
 import type { SupervisorRepository } from "../ports/supervisor.repository";
 import type { TurnoRepository } from "../ports/turno.repository";
 
-interface CriarTurnoInput extends TurnoProps {
+interface CriarTurnoInput extends CriarTurnoProps {
   supervisorId: string;
 }
 
 /** Só o supervisor cria turnos para os funcionários. */
-class CriarTurnoUseCase extends UseCase<CriarTurnoInput, Turno> {
+class CriarTurnoUseCase extends BaseUseCase<
+  CriarTurnoInput,
+  Turno,
+  ValidationError | NotFoundError
+> {
   constructor(
-    private readonly supervisorRepository: SupervisorRepository,
-    private readonly turnoRepository: TurnoRepository,
+    private readonly supervisorRepository: Pick<SupervisorRepository, "findById">,
+    private readonly turnoRepository: Pick<TurnoRepository, "create">,
   ) {
     super();
   }
 
-  async execute(input: CriarTurnoInput): Promise<Result<Turno>> {
-    const supervisor = await this.supervisorRepository.findById(input.supervisorId);
-    if (!supervisor) {
-      return Result.fail<Turno>("Supervisor não encontrado");
+  protected async handle(
+    input: CriarTurnoInput,
+  ): Promise<Result<Turno, ValidationError | NotFoundError>> {
+    const supervisorId = idDoCampo(SupervisorId.from(input.supervisorId), "supervisorId");
+    if (supervisorId.isFail()) return supervisorId;
+    if (!(await this.supervisorRepository.findById(supervisorId.value))) {
+      return Result.fail(naoEncontrado.supervisor());
     }
 
-    const turnoOrError = Turno.create(input);
-    if (turnoOrError.isFailure) {
-      return Result.fail<Turno>(turnoOrError.error as string | Error);
-    }
+    const turno = Turno.create(input);
+    if (turno.isFail()) return turno;
 
-    const turno = turnoOrError.getValue();
-    await this.turnoRepository.save(turno);
-
-    return Result.ok<Turno>(turno);
+    await this.turnoRepository.create(turno.value);
+    return Result.ok(turno.value);
   }
 }
 

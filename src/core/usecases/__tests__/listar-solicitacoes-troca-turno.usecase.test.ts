@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { assertOk } from "core-kernel/testing";
+import { funcionarioId } from "../../__tests__/fixtures";
 import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { Turno } from "../../entities/turno.entity";
 import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
@@ -10,7 +12,7 @@ function criarTurno(funcionarioId: string) {
     horaInicio: "08:00",
     horaFim: "12:00",
     funcionarioId,
-  }).getValue();
+  }).unwrap();
 }
 
 function criarSut() {
@@ -26,29 +28,29 @@ describe("ListarSolicitacoesTrocaTurnoUseCase", () => {
 
     const result = await useCase.execute();
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toEqual([]);
+    assertOk(result);
+    expect(result.value).toEqual([]);
   });
 
   it("retorna todas as solicitações cadastradas", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacaoA = SolicitacaoTrocaTurno.create({
       turno: criarTurno("func-a"),
-      solicitanteId: "func-a",
-      destinatarioId: "func-c",
-    }).getValue();
+      solicitanteId: funcionarioId("func-a"),
+      destinatarioId: funcionarioId("func-c"),
+    }).unwrap();
     const solicitacaoB = SolicitacaoTrocaTurno.create({
       turno: criarTurno("func-b"),
-      solicitanteId: "func-b",
-      destinatarioId: "func-c",
-    }).getValue();
-    await solicitacaoRepository.save(solicitacaoA);
-    await solicitacaoRepository.save(solicitacaoB);
+      solicitanteId: funcionarioId("func-b"),
+      destinatarioId: funcionarioId("func-c"),
+    }).unwrap();
+    await solicitacaoRepository.create(solicitacaoA);
+    await solicitacaoRepository.create(solicitacaoB);
 
     const result = await useCase.execute();
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toHaveLength(2);
-    expect(result.getValue()).toEqual(expect.arrayContaining([solicitacaoA, solicitacaoB]));
+    assertOk(result);
+    expect(result.value).toHaveLength(2);
+    expect(result.value).toEqual(expect.arrayContaining([solicitacaoA, solicitacaoB]));
   });
 });

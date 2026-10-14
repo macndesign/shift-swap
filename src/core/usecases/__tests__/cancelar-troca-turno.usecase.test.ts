@@ -1,4 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
+import { AGORA, funcionarioId } from "../../__tests__/fixtures";
 import { SolicitacaoTrocaTurno } from "../../entities/solicitacao-troca-turno.entity";
 import { Turno } from "../../entities/turno.entity";
 import { SolicitacaoTrocaTurnoInMemoryRepository } from "../__mocks__/solicitacao-troca-turno-in-memory.repository";
@@ -10,13 +12,13 @@ function criarSolicitacao(solicitanteId = "func-a") {
     horaInicio: "08:00",
     horaFim: "12:00",
     funcionarioId: solicitanteId,
-  }).getValue();
+  }).unwrap();
 
   return SolicitacaoTrocaTurno.create({
     turno,
-    solicitanteId,
-    destinatarioId: "func-b",
-  }).getValue();
+    solicitanteId: funcionarioId(solicitanteId),
+    destinatarioId: funcionarioId("func-b"),
+  }).unwrap();
 }
 
 function criarSut() {
@@ -30,30 +32,30 @@ describe("CancelarTrocaTurnoUseCase", () => {
   it("cancela uma solicitação pendente quando quem cancela é o solicitante", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao("func-a");
-    await solicitacaoRepository.save(solicitacao);
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
+      solicitacaoId: solicitacao.id.value,
       solicitanteId: "func-a",
     });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue().status).toBe("cancelada");
+    assertOk(result);
+    expect(result.value.status).toBe("cancelada");
   });
 
   it("cancela uma solicitação que o destinatário já aceitou e aguarda aprovação", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao("func-a");
-    await solicitacaoRepository.save(solicitacao);
-    solicitacao.aceitar({ funcionarioId: "func-b" });
+    await solicitacaoRepository.create(solicitacao);
+    solicitacao.aceitar({ funcionarioId: funcionarioId("func-b"), agora: AGORA }).unwrap();
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
+      solicitacaoId: solicitacao.id.value,
       solicitanteId: "func-a",
     });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue().status).toBe("cancelada");
+    assertOk(result);
+    expect(result.value.status).toBe("cancelada");
   });
 
   it("falha quando a solicitação não existe", async () => {
@@ -64,36 +66,36 @@ describe("CancelarTrocaTurnoUseCase", () => {
       solicitanteId: "func-a",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Solicitação não encontrada");
+    assertFail(result, "SOLICITACAO_NAO_ENCONTRADA");
+    expect(result.error.message).toBe("Solicitação não encontrada");
   });
 
   it("falha quando quem tenta cancelar não é o solicitante", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao("func-a");
-    await solicitacaoRepository.save(solicitacao);
+    await solicitacaoRepository.create(solicitacao);
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
+      solicitacaoId: solicitacao.id.value,
       solicitanteId: "func-b",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Somente o solicitante pode cancelar a solicitação");
+    assertFail(result, "SOMENTE_SOLICITANTE");
+    expect(result.error.message).toBe("Somente o solicitante pode cancelar a solicitação");
   });
 
   it("falha quando a solicitação já foi cancelada", async () => {
     const { solicitacaoRepository, useCase } = criarSut();
     const solicitacao = criarSolicitacao("func-a");
-    await solicitacaoRepository.save(solicitacao);
-    solicitacao.cancelar();
+    await solicitacaoRepository.create(solicitacao);
+    solicitacao.cancelar().unwrap();
 
     const result = await useCase.execute({
-      solicitacaoId: solicitacao.id,
+      solicitacaoId: solicitacao.id.value,
       solicitanteId: "func-a",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Não é possível cancelar uma solicitação cancelada");
+    assertFail(result, "TRANSICAO_INVALIDA");
+    expect(result.error.message).toBe("Não é possível cancelar uma solicitação cancelada");
   });
 });

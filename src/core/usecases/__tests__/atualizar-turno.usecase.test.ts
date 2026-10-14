@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
 import { SupervisorEntity } from "../../entities/supervisor.entity";
 import { Turno } from "../../entities/turno.entity";
 import { SupervisorInMemoryRepository } from "../__mocks__/supervisor-in-memory.repository";
@@ -17,8 +18,8 @@ async function criarSupervisor(repository: SupervisorInMemoryRepository) {
   const supervisor = SupervisorEntity.create({
     name: "Sup Visor",
     email: "sup@empresa.com",
-  }).getValue();
-  await repository.save(supervisor);
+  }).unwrap();
+  await repository.create(supervisor);
   return supervisor;
 }
 
@@ -31,21 +32,21 @@ describe("AtualizarTurnoUseCase", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
-    await turnoRepository.save(turno);
+    }).unwrap();
+    await turnoRepository.create(turno);
 
     const result = await useCase.execute({
-      supervisorId: supervisor.id,
-      id: turno.id,
+      supervisorId: supervisor.id.value,
+      id: turno.id.value,
       data: "2026-09-25",
       horaInicio: "13:00",
       horaFim: "17:00",
     });
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue().data).toBe("2026-09-25");
-    expect(result.getValue().horaInicio).toBe("13:00");
-    expect(result.getValue().horaFim).toBe("17:00");
+    assertOk(result);
+    expect(result.value.data).toBe("2026-09-25");
+    expect(result.value.horaInicio).toBe("13:00");
+    expect(result.value.horaFim).toBe("17:00");
   });
 
   it("falha quando o turno não existe", async () => {
@@ -53,15 +54,15 @@ describe("AtualizarTurnoUseCase", () => {
     const supervisor = await criarSupervisor(supervisorRepository);
 
     const result = await useCase.execute({
-      supervisorId: supervisor.id,
+      supervisorId: supervisor.id.value,
       id: "turno-inexistente",
       data: "2026-09-25",
       horaInicio: "13:00",
       horaFim: "17:00",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Turno não encontrado");
+    assertFail(result, "TURNO_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Turno não encontrado");
   });
 
   it("falha quando o novo horário é inválido", async () => {
@@ -72,19 +73,19 @@ describe("AtualizarTurnoUseCase", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
-    await turnoRepository.save(turno);
+    }).unwrap();
+    await turnoRepository.create(turno);
 
     const result = await useCase.execute({
-      supervisorId: supervisor.id,
-      id: turno.id,
+      supervisorId: supervisor.id.value,
+      id: turno.id.value,
       data: "2026-09-25",
       horaInicio: "17:00",
       horaFim: "13:00",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Hora de fim deve ser depois da hora de início");
+    assertFail(result, "HORARIO_INVALIDO");
+    expect(result.error.message).toBe("Hora de fim deve ser depois da hora de início");
   });
 
   it("falha quando o supervisor não existe e não altera o turno", async () => {
@@ -94,19 +95,19 @@ describe("AtualizarTurnoUseCase", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
-    await turnoRepository.save(turno);
+    }).unwrap();
+    await turnoRepository.create(turno);
 
     const result = await useCase.execute({
       supervisorId: "sup-inexistente",
-      id: turno.id,
+      id: turno.id.value,
       data: "2026-09-25",
       horaInicio: "13:00",
       horaFim: "17:00",
     });
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Supervisor não encontrado");
+    assertFail(result, "SUPERVISOR_NAO_ENCONTRADO");
+    expect(result.error.message).toBe("Supervisor não encontrado");
     expect(turno.data).toBe("2026-09-24");
   });
 });

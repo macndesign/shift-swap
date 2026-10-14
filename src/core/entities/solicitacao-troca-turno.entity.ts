@@ -1,9 +1,11 @@
-import { Entity } from "../../shared/entity";
-import { Result } from "../../shared/result";
+import { Entity, ForbiddenError, Result, ValidationError } from "core-kernel";
+import { CODIGOS_ERRO } from "../erros";
+import { type FuncionarioId, SolicitacaoTrocaTurnoId, type SupervisorId } from "./ids";
 import {
   type AceitarSolicitacaoProps,
   type AprovarSolicitacaoProps,
   type ContextoSolicitacao,
+  type ErroTransicao,
   type EstadoSolicitacao,
   estadoDe,
   type MudancaSolicitacao,
@@ -16,25 +18,28 @@ import type { Turno } from "./turno.entity";
 
 interface SolicitacaoTrocaTurnoProps {
   turno: Turno;
-  solicitanteId: string;
-  destinatarioId: string;
+  solicitanteId: FuncionarioId;
+  destinatarioId: FuncionarioId;
   status: StatusSolicitacaoTrocaTurno;
   respondidaEm?: Date;
-  decididoPorId?: string;
+  decididoPorId?: SupervisorId;
   decididoEm?: Date;
   motivo?: string;
 }
 
 interface CreateSolicitacaoTrocaTurnoProps {
   turno: Turno;
-  solicitanteId: string;
-  destinatarioId: string;
+  solicitanteId: FuncionarioId;
+  destinatarioId: FuncionarioId;
 }
 
 type ReconstituirSolicitacaoTrocaTurnoProps = SolicitacaoTrocaTurnoProps;
 
-class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
-  private constructor(props: SolicitacaoTrocaTurnoProps, id?: string) {
+const incoerente = (message: string) =>
+  Result.fail(new ValidationError({ code: CODIGOS_ERRO.DADOS_INCOERENTES, message }));
+
+class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps, SolicitacaoTrocaTurnoId> {
+  private constructor(props: SolicitacaoTrocaTurnoProps, id: SolicitacaoTrocaTurnoId) {
     super(props, id);
   }
 
@@ -42,11 +47,11 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
     return this.props.turno;
   }
 
-  get solicitanteId(): string {
+  get solicitanteId(): FuncionarioId {
     return this.props.solicitanteId;
   }
 
-  get destinatarioId(): string {
+  get destinatarioId(): FuncionarioId {
     return this.props.destinatarioId;
   }
 
@@ -58,7 +63,7 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
     return this.props.respondidaEm;
   }
 
-  get decididoPorId(): string | undefined {
+  get decididoPorId(): SupervisorId | undefined {
     return this.props.decididoPorId;
   }
 
@@ -71,30 +76,30 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
   }
 
   /** O destinatário topa a troca; passa a aguardar a autorização do supervisor. */
-  aceitar(props: AceitarSolicitacaoProps): Result<void> {
+  aceitar(props: AceitarSolicitacaoProps): Result<void, ErroTransicao> {
     return this.estado.aceitar(this.contexto, props);
   }
 
   /** O destinatário não topa a troca; encerra a solicitação. */
-  recusar(props: RecusarSolicitacaoProps): Result<void> {
+  recusar(props: RecusarSolicitacaoProps): Result<void, ErroTransicao> {
     return this.estado.recusar(this.contexto, props);
   }
 
   /** O supervisor autoriza a troca já aceita e o turno muda de dono. */
-  aprovar(props: AprovarSolicitacaoProps): Result<void> {
+  aprovar(props: AprovarSolicitacaoProps): Result<void, ErroTransicao> {
     return this.estado.aprovar(this.contexto, props);
   }
 
   /** O supervisor não autoriza a troca já aceita. */
-  rejeitar(props: RejeitarSolicitacaoProps): Result<void> {
+  rejeitar(props: RejeitarSolicitacaoProps): Result<void, ErroTransicao> {
     return this.estado.rejeitar(this.contexto, props);
   }
 
-  cancelar(): Result<void> {
+  cancelar(): Result<void, ErroTransicao> {
     return this.estado.cancelar(this.contexto);
   }
 
-  expirar(): Result<void> {
+  expirar(): Result<void, ErroTransicao> {
     return this.estado.expirar(this.contexto);
   }
 
@@ -113,37 +118,39 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
 
   private aplicar(mudanca: MudancaSolicitacao): void {
     this.props.status = mudanca.status;
-    if (mudanca.respondida) {
-      this.props.respondidaEm = new Date();
+    if (mudanca.respondidaEm) {
+      this.props.respondidaEm = mudanca.respondidaEm;
     }
     if (mudanca.motivo !== undefined) {
       this.props.motivo = mudanca.motivo;
     }
-    if (mudanca.decididoPorId !== undefined) {
-      this.props.decididoPorId = mudanca.decididoPorId;
-      this.props.decididoEm = new Date();
+    if (mudanca.decisao) {
+      this.props.decididoPorId = mudanca.decisao.por;
+      this.props.decididoEm = mudanca.decisao.em;
     }
   }
 
   static create(
     props: CreateSolicitacaoTrocaTurnoProps,
-    id?: string,
-  ): Result<SolicitacaoTrocaTurno> {
-    if (props.solicitanteId !== props.turno.funcionarioId) {
-      return Result.fail<SolicitacaoTrocaTurno>(
-        "Somente o funcionário dono do turno pode solicitar a troca",
+  ): Result<SolicitacaoTrocaTurno, ForbiddenError | ValidationError> {
+    if (!props.solicitanteId.equals(props.turno.funcionarioId)) {
+      return Result.fail(
+        new ForbiddenError("Somente o funcionário dono do turno pode solicitar a troca", {
+          code: CODIGOS_ERRO.SOMENTE_DONO_DO_TURNO,
+        }),
       );
     }
-    if (!props.destinatarioId || props.destinatarioId.trim().length === 0) {
-      return Result.fail<SolicitacaoTrocaTurno>("Id do destinatário não pode ser vazio");
-    }
-    if (props.destinatarioId === props.solicitanteId) {
-      return Result.fail<SolicitacaoTrocaTurno>(
-        "O solicitante não pode ser o destinatário da própria solicitação",
+    if (props.destinatarioId.equals(props.solicitanteId)) {
+      return Result.fail(
+        new ValidationError({
+          field: "destinatarioId",
+          code: CODIGOS_ERRO.DESTINATARIO_IGUAL_SOLICITANTE,
+          message: "O solicitante não pode ser o destinatário da própria solicitação",
+        }),
       );
     }
 
-    return Result.ok<SolicitacaoTrocaTurno>(
+    return Result.ok(
       new SolicitacaoTrocaTurno(
         {
           turno: props.turno,
@@ -151,7 +158,7 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
           destinatarioId: props.destinatarioId,
           status: "pendente",
         },
-        id,
+        SolicitacaoTrocaTurnoId.generate(),
       ),
     );
   }
@@ -163,30 +170,26 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
    */
   static reconstituir(
     props: ReconstituirSolicitacaoTrocaTurnoProps,
-    id: string,
-  ): Result<SolicitacaoTrocaTurno> {
-    if (!id || id.trim().length === 0) {
-      return Result.fail<SolicitacaoTrocaTurno>("Id da solicitação não pode ser vazio");
-    }
-    if (!props.solicitanteId || props.solicitanteId.trim().length === 0) {
-      return Result.fail<SolicitacaoTrocaTurno>("Id do solicitante não pode ser vazio");
-    }
-    if (!props.destinatarioId || props.destinatarioId.trim().length === 0) {
-      return Result.fail<SolicitacaoTrocaTurno>("Id do destinatário não pode ser vazio");
-    }
+    id: SolicitacaoTrocaTurnoId,
+  ): Result<SolicitacaoTrocaTurno, ValidationError> {
     if (!STATUS_SOLICITACAO.includes(props.status)) {
-      return Result.fail<SolicitacaoTrocaTurno>(`Status inválido: ${props.status}`);
+      return Result.fail(
+        new ValidationError({
+          field: "status",
+          code: CODIGOS_ERRO.STATUS_INVALIDO,
+          message: `Status inválido: ${props.status}`,
+        }),
+      );
     }
 
-    const coerenciaOrError = SolicitacaoTrocaTurno.validarCoerencia(props);
-    if (coerenciaOrError.isFailure) {
-      return Result.fail<SolicitacaoTrocaTurno>(coerenciaOrError.error as string | Error);
-    }
-
-    return Result.ok<SolicitacaoTrocaTurno>(new SolicitacaoTrocaTurno({ ...props }, id));
+    return SolicitacaoTrocaTurno.validarCoerencia(props).map(
+      () => new SolicitacaoTrocaTurno({ ...props }, id),
+    );
   }
 
-  private static validarCoerencia(props: SolicitacaoTrocaTurnoProps): Result<void> {
+  private static validarCoerencia(
+    props: SolicitacaoTrocaTurnoProps,
+  ): Result<void, ValidationError> {
     const temSupervisor = Boolean(props.decididoPorId || props.decididoEm);
     const temDecisaoCompleta = Boolean(props.decididoPorId && props.decididoEm);
     const temDadosDeDecisao = temSupervisor || Boolean(props.motivo);
@@ -194,52 +197,46 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps> {
     switch (props.status) {
       case "pendente":
         if (props.respondidaEm || temDadosDeDecisao) {
-          return Result.fail<void>(
-            "Solicitação pendente não pode ter dados de resposta ou decisão",
-          );
+          return incoerente("Solicitação pendente não pode ter dados de resposta ou decisão");
         }
         break;
       case "aguardando_aprovacao":
         if (!props.respondidaEm) {
-          return Result.fail<void>(
+          return incoerente(
             "Solicitação aguardando aprovação exige a data da resposta do destinatário",
           );
         }
         if (temDadosDeDecisao) {
-          return Result.fail<void>(
-            "Solicitação aguardando aprovação não pode ter dados de decisão",
-          );
+          return incoerente("Solicitação aguardando aprovação não pode ter dados de decisão");
         }
         break;
       case "aprovada":
         if (!temDecisaoCompleta) {
-          return Result.fail<void>("Solicitação aprovada exige supervisor e data da decisão");
+          return incoerente("Solicitação aprovada exige supervisor e data da decisão");
         }
         break;
       case "rejeitada":
         if (!(temDecisaoCompleta && props.motivo)) {
-          return Result.fail<void>(
-            "Solicitação rejeitada exige supervisor, data da decisão e motivo",
-          );
+          return incoerente("Solicitação rejeitada exige supervisor, data da decisão e motivo");
         }
         break;
       case "recusada":
         if (!props.respondidaEm) {
-          return Result.fail<void>("Solicitação recusada exige a data da resposta do destinatário");
+          return incoerente("Solicitação recusada exige a data da resposta do destinatário");
         }
         if (temSupervisor) {
-          return Result.fail<void>("Solicitação recusada não pode ter dados de decisão");
+          return incoerente("Solicitação recusada não pode ter dados de decisão");
         }
         break;
       case "cancelada":
       case "expirada":
         if (temDadosDeDecisao) {
-          return Result.fail<void>(`Solicitação ${props.status} não pode ter dados de decisão`);
+          return incoerente(`Solicitação ${props.status} não pode ter dados de decisão`);
         }
         break;
     }
 
-    return Result.ok<void>();
+    return Result.ok();
   }
 }
 

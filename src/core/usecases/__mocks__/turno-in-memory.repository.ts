@@ -1,33 +1,15 @@
+import { InMemoryRepository } from "core-kernel/testing";
+import type { FuncionarioId } from "../../entities/ids";
 import type { Turno } from "../../entities/turno.entity";
-import { TurnoRepository } from "../../ports/turno.repository";
+import type { TurnoRepository } from "../../ports/turno.repository";
 
-class TurnoInMemoryRepository extends TurnoRepository {
-  private readonly items = new Map<string, Turno>();
-
-  async save(entity: Turno): Promise<void> {
-    this.items.set(entity.id, entity);
-  }
-
-  async update(entity: Turno): Promise<void> {
-    this.items.set(entity.id, entity);
-  }
-
-  async delete(id: string): Promise<void> {
-    this.items.delete(id);
-  }
-
-  async findById(id: string): Promise<Turno | null> {
-    return this.items.get(id) ?? null;
-  }
-
+class TurnoInMemoryRepository extends InMemoryRepository<Turno> implements TurnoRepository {
   async findAll(): Promise<Turno[]> {
-    return Array.from(this.items.values());
+    return this.filter(() => true);
   }
 
-  async findByFuncionarioIdAndData(funcionarioId: string, data: string): Promise<Turno[]> {
-    return Array.from(this.items.values()).filter(
-      (turno) => turno.funcionarioId === funcionarioId && turno.data === data,
-    );
+  async findByFuncionarioIdAndData(funcionarioId: FuncionarioId, data: string): Promise<Turno[]> {
+    return this.filter((turno) => turno.funcionarioId.equals(funcionarioId) && turno.data === data);
   }
 }
 

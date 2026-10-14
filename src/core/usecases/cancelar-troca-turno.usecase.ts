@@ -1,6 +1,14 @@
-import { Result } from "../../shared/result";
-import { UseCase } from "../../shared/use-case";
+import {
+  BaseUseCase,
+  ForbiddenError,
+  type NotFoundError,
+  Result,
+  type ValidationError,
+} from "core-kernel";
+import { FuncionarioId, idDoCampo, SolicitacaoTrocaTurnoId } from "../entities/ids";
 import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
+import type { ErroTransicao } from "../entities/solicitacao-troca-turno.state";
+import { CODIGOS_ERRO, naoEncontrado } from "../erros";
 import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
 
 interface CancelarTrocaTurnoInput {
@@ -8,31 +16,49 @@ interface CancelarTrocaTurnoInput {
   solicitanteId: string;
 }
 
-class CancelarTrocaTurnoUseCase extends UseCase<CancelarTrocaTurnoInput, SolicitacaoTrocaTurno> {
-  constructor(private readonly solicitacaoRepository: SolicitacaoTrocaTurnoRepository) {
+type Erro = ValidationError | NotFoundError | ErroTransicao;
+
+/** O solicitante desiste da troca enquanto ela ainda está em aberto. */
+class CancelarTrocaTurnoUseCase extends BaseUseCase<
+  CancelarTrocaTurnoInput,
+  SolicitacaoTrocaTurno,
+  Erro
+> {
+  constructor(
+    private readonly solicitacaoRepository: Pick<
+      SolicitacaoTrocaTurnoRepository,
+      "findById" | "update"
+    >,
+  ) {
     super();
   }
 
-  async execute(input: CancelarTrocaTurnoInput): Promise<Result<SolicitacaoTrocaTurno>> {
-    const solicitacao = await this.solicitacaoRepository.findById(input.solicitacaoId);
-    if (!solicitacao) {
-      return Result.fail<SolicitacaoTrocaTurno>("Solicitação não encontrada");
-    }
+  protected async handle(
+    input: CancelarTrocaTurnoInput,
+  ): Promise<Result<SolicitacaoTrocaTurno, Erro>> {
+    const ids = Result.combine([
+      idDoCampo(SolicitacaoTrocaTurnoId.from(input.solicitacaoId), "solicitacaoId"),
+      idDoCampo(FuncionarioId.from(input.solicitanteId), "solicitanteId"),
+    ]);
+    if (ids.isFail()) return ids;
+    const [solicitacaoId, solicitanteId] = ids.value;
 
-    if (solicitacao.solicitanteId !== input.solicitanteId) {
-      return Result.fail<SolicitacaoTrocaTurno>(
-        "Somente o solicitante pode cancelar a solicitação",
+    const solicitacao = await this.solicitacaoRepository.findById(solicitacaoId);
+    if (!solicitacao) return Result.fail(naoEncontrado.solicitacao());
+
+    if (!solicitacao.solicitanteId.equals(solicitanteId)) {
+      return Result.fail(
+        new ForbiddenError("Somente o solicitante pode cancelar a solicitação", {
+          code: CODIGOS_ERRO.SOMENTE_SOLICITANTE,
+        }),
       );
     }
 
-    const cancelarOrError = solicitacao.cancelar();
-    if (cancelarOrError.isFailure) {
-      return Result.fail<SolicitacaoTrocaTurno>(cancelarOrError.error as string | Error);
-    }
+    const cancelada = solicitacao.cancelar();
+    if (cancelada.isFail()) return cancelada;
 
     await this.solicitacaoRepository.update(solicitacao);
-
-    return Result.ok<SolicitacaoTrocaTurno>(solicitacao);
+    return Result.ok(solicitacao);
   }
 }
 

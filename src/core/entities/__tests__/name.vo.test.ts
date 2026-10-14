@@ -1,51 +1,52 @@
 import { describe, expect, it } from "bun:test";
+import { assertFail, assertOk } from "core-kernel/testing";
 import { NameVO } from "../name.vo";
 
 describe("NameVO", () => {
   it("cria um NameVO válido", () => {
     const result = NameVO.create("Maria");
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue().value).toBe("Maria");
+    assertOk(result);
+    expect(result.value.value).toBe("Maria");
   });
 
   it("aceita um nome com exatamente 3 caracteres", () => {
     const result = NameVO.create("Ana");
 
-    expect(result.isSuccess).toBe(true);
+    assertOk(result);
   });
 
   it("falha quando o nome é vazio", () => {
     const result = NameVO.create("");
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Nome não pode ser vazio");
+    assertFail(result, "NOME_VAZIO");
+    expect(result.error.message).toBe("Nome não pode ser vazio");
   });
 
   it("falha quando o nome contém apenas espaços", () => {
     const result = NameVO.create("   ");
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Nome não pode ser vazio");
+    assertFail(result, "NOME_VAZIO");
+    expect(result.error.message).toBe("Nome não pode ser vazio");
   });
 
   it("falha quando o nome tem menos de 3 caracteres", () => {
     const result = NameVO.create("Al");
 
-    expect(result.isFailure).toBe(true);
-    expect(result.error).toBe("Nome deve ter pelo menos 3 caracteres");
+    assertFail(result, "NOME_CURTO");
+    expect(result.error.message).toBe("Nome deve ter pelo menos 3 caracteres");
   });
 
   it("considera dois NameVO com o mesmo valor iguais", () => {
-    const a = NameVO.create("Maria").getValue();
-    const b = NameVO.create("Maria").getValue();
+    const a = NameVO.create("Maria").unwrap();
+    const b = NameVO.create("Maria").unwrap();
 
     expect(a.equals(b)).toBe(true);
   });
 
   it("considera dois NameVO com valores diferentes desiguais", () => {
-    const a = NameVO.create("Maria").getValue();
-    const b = NameVO.create("Joana").getValue();
+    const a = NameVO.create("Maria").unwrap();
+    const b = NameVO.create("Joana").unwrap();
 
     expect(a.equals(b)).toBe(false);
   });

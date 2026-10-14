@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { assertOk } from "core-kernel/testing";
 import { Turno } from "../../entities/turno.entity";
 import { TurnoInMemoryRepository } from "../__mocks__/turno-in-memory.repository";
 import { ListarTurnosUseCase } from "../listar-turnos.usecase";
@@ -16,8 +17,8 @@ describe("ListarTurnosUseCase", () => {
 
     const result = await useCase.execute();
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toEqual([]);
+    assertOk(result);
+    expect(result.value).toEqual([]);
   });
 
   it("retorna todos os turnos cadastrados", async () => {
@@ -27,20 +28,20 @@ describe("ListarTurnosUseCase", () => {
       horaInicio: "08:00",
       horaFim: "12:00",
       funcionarioId: "func-a",
-    }).getValue();
+    }).unwrap();
     const turnoB = Turno.create({
       data: "2026-09-25",
       horaInicio: "13:00",
       horaFim: "17:00",
       funcionarioId: "func-b",
-    }).getValue();
-    await turnoRepository.save(turnoA);
-    await turnoRepository.save(turnoB);
+    }).unwrap();
+    await turnoRepository.create(turnoA);
+    await turnoRepository.create(turnoB);
 
     const result = await useCase.execute();
 
-    expect(result.isSuccess).toBe(true);
-    expect(result.getValue()).toHaveLength(2);
-    expect(result.getValue()).toEqual(expect.arrayContaining([turnoA, turnoB]));
+    assertOk(result);
+    expect(result.value).toHaveLength(2);
+    expect(result.value).toEqual(expect.arrayContaining([turnoA, turnoB]));
   });
 });
