@@ -1,5 +1,5 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
-import { idDoCampo, SolicitacaoTrocaTurnoId } from "../entities/ids";
+import { opcoesDeId, SolicitacaoTrocaTurnoId } from "../entities/ids";
 import type { SolicitacaoTrocaTurno } from "../entities/solicitacao-troca-turno.entity";
 import { naoEncontrado } from "../erros";
 import type { SolicitacaoTrocaTurnoRepository } from "../ports/solicitacao-troca-turno.repository";
@@ -24,7 +24,7 @@ class BuscarSolicitacaoTrocaTurnoPorIdUseCase extends BaseUseCase<
   protected async handle(
     input: BuscarSolicitacaoTrocaTurnoPorIdInput,
   ): Promise<Result<SolicitacaoTrocaTurno, Erro>> {
-    const id = idDoCampo(SolicitacaoTrocaTurnoId.from(input.id), "id");
+    const id = SolicitacaoTrocaTurnoId.from(input.id, opcoesDeId("id"));
     if (id.isFail()) return id;
 
     const solicitacao = await this.solicitacaoRepository.findById(id.value);

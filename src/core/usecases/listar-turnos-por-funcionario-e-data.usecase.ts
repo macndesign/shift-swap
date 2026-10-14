@@ -1,5 +1,5 @@
 import { BaseUseCase, Result, type ValidationError } from "core-kernel";
-import { FuncionarioId, idDoCampo } from "../entities/ids";
+import { FuncionarioId, opcoesDeId } from "../entities/ids";
 import type { Turno } from "../entities/turno.entity";
 import type { TurnoRepository } from "../ports/turno.repository";
 
@@ -22,7 +22,7 @@ class ListarTurnosPorFuncionarioEDataUseCase extends BaseUseCase<
   protected async handle(
     input: ListarTurnosPorFuncionarioEDataInput,
   ): Promise<Result<Turno[], ValidationError>> {
-    const funcionarioId = idDoCampo(FuncionarioId.from(input.funcionarioId), "funcionarioId");
+    const funcionarioId = FuncionarioId.from(input.funcionarioId, opcoesDeId("funcionarioId"));
     if (funcionarioId.isFail()) return funcionarioId;
 
     return Result.ok(

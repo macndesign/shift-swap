@@ -1,4 +1,5 @@
-import { type Result, UniqueId, ValidationError } from "core-kernel";
+import { type GuardOptions, UniqueId } from "core-kernel";
+import { CODIGOS_ERRO } from "../erros";
 
 /** Ids tipados: o compilador não deixa passar o id de um tipo onde se espera o de outro. */
 class FuncionarioId extends UniqueId {
@@ -18,16 +19,11 @@ class SolicitacaoTrocaTurnoId extends UniqueId {
 }
 
 /**
- * Converte a falha de `XxxId.from(raw)` (código genérico `INVALID_ID`, campo `id`) para o
- * padrão do shift-swap: código `ID_INVALIDO` e o campo de origem (`turnoId`, `funcionarioId`...).
+ * Opções de `XxxId.from(raw, opcoes)` no padrão do shift-swap: código `ID_INVALIDO` e o campo
+ * de origem (`turnoId`, `funcionarioId`...) em vez do padrão do core-kernel (`INVALID_ID`, `id`).
  */
-function idDoCampo<I extends UniqueId>(
-  resultado: Result<I, ValidationError>,
-  campo: string,
-): Result<I, ValidationError> {
-  return resultado.mapError(
-    () => new ValidationError({ field: campo, code: "ID_INVALIDO", message: `${campo} inválido` }),
-  );
+function opcoesDeId(campo: string): GuardOptions {
+  return { field: campo, code: CODIGOS_ERRO.ID_INVALIDO, message: `${campo} inválido` };
 }
 
-export { FuncionarioId, idDoCampo, SolicitacaoTrocaTurnoId, SupervisorId, TurnoId };
+export { FuncionarioId, opcoesDeId, SolicitacaoTrocaTurnoId, SupervisorId, TurnoId };

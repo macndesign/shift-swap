@@ -1,5 +1,5 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
-import { idDoCampo, SupervisorId, TurnoId } from "../entities/ids";
+import { opcoesDeId, SupervisorId, TurnoId } from "../entities/ids";
 import { naoEncontrado } from "../erros";
 import type { SupervisorRepository } from "../ports/supervisor.repository";
 import type { TurnoRepository } from "../ports/turno.repository";
@@ -22,8 +22,8 @@ class RemoverTurnoUseCase extends BaseUseCase<RemoverTurnoInput, void, Erro> {
 
   protected async handle(input: RemoverTurnoInput): Promise<Result<void, Erro>> {
     const ids = Result.combine([
-      idDoCampo(SupervisorId.from(input.supervisorId), "supervisorId"),
-      idDoCampo(TurnoId.from(input.id), "id"),
+      SupervisorId.from(input.supervisorId, opcoesDeId("supervisorId")),
+      TurnoId.from(input.id, opcoesDeId("id")),
     ]);
     if (ids.isFail()) return ids;
     const [supervisorId, turnoId] = ids.value;

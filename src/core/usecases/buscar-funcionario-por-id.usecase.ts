@@ -1,6 +1,6 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
 import type { FuncionarioEntity } from "../entities/funcionario.entity";
-import { FuncionarioId, idDoCampo } from "../entities/ids";
+import { FuncionarioId, opcoesDeId } from "../entities/ids";
 import { naoEncontrado } from "../erros";
 import type { FuncionarioRepository } from "../ports/funcionario.repository";
 
@@ -22,7 +22,7 @@ class BuscarFuncionarioPorIdUseCase extends BaseUseCase<
   protected async handle(
     input: BuscarFuncionarioPorIdInput,
   ): Promise<Result<FuncionarioEntity, Erro>> {
-    const id = idDoCampo(FuncionarioId.from(input.id), "id");
+    const id = FuncionarioId.from(input.id, opcoesDeId("id"));
     if (id.isFail()) return id;
 
     const funcionario = await this.funcionarioRepository.findById(id.value);

@@ -1,6 +1,6 @@
-import { Entity, Result, UniqueId, type ValidationError } from "core-kernel";
+import { Entity, type GuardOptions, Result, UniqueId, type ValidationError } from "core-kernel";
 import { EmailVO } from "./email.vo";
-import { idDoCampo } from "./ids";
+import { opcoesDeId } from "./ids";
 import { NameVO } from "./name.vo";
 
 interface PessoaProps {
@@ -48,10 +48,10 @@ class PessoaEntity<Id extends UniqueId = UniqueId> extends Entity<PessoaProps, I
    * validado pela classe de id da subclasse.
    */
   protected static resolverId<I extends UniqueId>(
-    classe: { generate(): I; from(raw: string): Result<I, ValidationError> },
+    classe: { generate(): I; from(raw: string, opcoes?: GuardOptions): Result<I, ValidationError> },
     id: string | undefined,
   ): Result<I, ValidationError> {
-    return id === undefined ? Result.ok(classe.generate()) : idDoCampo(classe.from(id), "id");
+    return id === undefined ? Result.ok(classe.generate()) : classe.from(id, opcoesDeId("id"));
   }
 
   static create(props: CreatePessoaProps, id?: string): Result<PessoaEntity, ValidationError> {

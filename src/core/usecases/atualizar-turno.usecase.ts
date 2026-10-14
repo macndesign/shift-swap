@@ -1,5 +1,5 @@
 import { BaseUseCase, type NotFoundError, Result, type ValidationError } from "core-kernel";
-import { idDoCampo, SupervisorId, TurnoId } from "../entities/ids";
+import { opcoesDeId, SupervisorId, TurnoId } from "../entities/ids";
 import type { Turno } from "../entities/turno.entity";
 import { naoEncontrado } from "../erros";
 import type { SupervisorRepository } from "../ports/supervisor.repository";
@@ -26,8 +26,8 @@ class AtualizarTurnoUseCase extends BaseUseCase<AtualizarTurnoInput, Turno, Erro
 
   protected async handle(input: AtualizarTurnoInput): Promise<Result<Turno, Erro>> {
     const ids = Result.combine([
-      idDoCampo(SupervisorId.from(input.supervisorId), "supervisorId"),
-      idDoCampo(TurnoId.from(input.id), "id"),
+      SupervisorId.from(input.supervisorId, opcoesDeId("supervisorId")),
+      TurnoId.from(input.id, opcoesDeId("id")),
     ]);
     if (ids.isFail()) return ids;
     const [supervisorId, turnoId] = ids.value;
