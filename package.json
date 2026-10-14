@@ -1,6 +1,6 @@
 {
   "name": "shift-swap",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Biblioteca de domínio (DDD/Clean Architecture) para troca de turnos entre funcionários",
   "type": "module",
   "main": "./dist/index.js",
