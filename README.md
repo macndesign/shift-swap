@@ -268,8 +268,11 @@ esse último passo falhar, o pacote já está no npm — não rode o workflow de
 `npm publish` falharia por versão repetida); crie a release manualmente:
 
 ```bash
-gh release create vX.Y.Z --verify-tag --title X.Y.Z --generate-notes
+gh release create vX.Y.Z --verify-tag --title X.Y.Z --generate-notes --notes-start-tag vA.B.C
 ```
+
+(`vA.B.C` é a tag da versão anterior; sem ela, o GitHub pode escolher outra tag como ponto
+de partida das notas.)
 
 Depois, abra um PR de `chore/release-vX.Y.Z` para `master` e faça o merge usando
 **"Create a merge commit"** (não "Squash" nem "Rebase") — isso preserva o SHA exato do
