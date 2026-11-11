@@ -1,8 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
+import { Email, Text } from "core-kernel/vo";
 import { supervisorId } from "../../__tests__/fixtures.js";
-import { EmailVO } from "../email.vo.js";
-import { NameVO } from "../name.vo.js";
 import { PessoaEntity } from "../pessoa.entity.js";
 import { SupervisorEntity } from "../supervisor.entity.js";
 
@@ -53,8 +52,8 @@ describe("SupervisorEntity", () => {
     it("reidrata o supervisor com o id e os dados salvos", () => {
       const supervisor = SupervisorEntity.reconstituir(
         {
-          name: NameVO.create("Maria").unwrap(),
-          email: EmailVO.create("maria@exemplo.com").unwrap(),
+          name: Text.create("Maria").unwrap(),
+          email: Email.create("maria@exemplo.com").unwrap(),
         },
         supervisorId("sup-salvo"),
       );

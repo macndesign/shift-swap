@@ -105,12 +105,13 @@ kebab-case terminando no sufixo do tipo: `*.entity.ts`, `*.vo.ts`, `*.usecase.ts
   `DateRange`: é o que o negócio usa e a comparação de texto ordena corretamente.
 
 ### Value Objects
-Estendem `ValueObject<T>` do core-kernel, `static create(raw, campo?): Result<Vo, ValidationError>`,
-validando com `Guard` e passando `{ field, code, message }` em português. (`NameVO`/`EmailVO` são
-próprios, e não `Text`/`Email` de `core-kernel/vo`, porque guardam o valor como veio: o `Email`
-do core-kernel normaliza com trim + lowercase e o `Text` guarda o texto sem espaços nas pontas. Desde a
-0.2.0 os VOs prontos aceitam `errors` para trocar código/mensagem, então isso não é mais
-impedimento; trocar mudaria o valor guardado e a API pública, e é decisão de negócio.)
+Antes de criar um VO, use os prontos de `core-kernel/vo` (`Text`, `Email`, `DateRange`...)
+passando `{ field, errors }` para ter códigos e mensagens em português (ex.: `name`/`email` de
+`PessoaEntity` são `Text`/`Email`, com os códigos `NOME_*`/`EMAIL_*`; veja `criarNome`/`criarEmail`).
+Lembre que eles normalizam o valor guardado (`Text`: trim; `Email`: trim + minúsculas).
+Só crie um VO próprio quando nenhum servir: estenda `ValueObject<T>`, com
+`static create(raw, campo?): Result<Vo, ValidationError>` validando com `Guard` e
+`{ field, code, message }` em português.
 
 ### Erros
 - Toda falha é um erro tipado do core-kernel com `code` de `CODIGOS_ERRO`: `ValidationError`

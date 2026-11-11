@@ -1,8 +1,7 @@
 // Blocos genéricos (Result, erros, Clock, ports base) vêm do core-kernel, peerDependency
 // desta lib: importe-os direto de "core-kernel".
 
-// Entities, value objects e ids
-export { EmailVO } from "./core/entities/email.vo.js";
+// Entities e ids (nome e e-mail das pessoas são `Text`/`Email` de "core-kernel/vo")
 export { FuncionarioEntity } from "./core/entities/funcionario.entity.js";
 export {
   FuncionarioId,
@@ -10,7 +9,6 @@ export {
   SupervisorId,
   TurnoId,
 } from "./core/entities/ids.js";
-export { NameVO } from "./core/entities/name.vo.js";
 export type { CreatePessoaProps, PessoaProps } from "./core/entities/pessoa.entity.js";
 export {
   type ReconstituirSolicitacaoTrocaTurnoProps,

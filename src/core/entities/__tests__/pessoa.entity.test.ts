@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
+import { Email, Text } from "core-kernel/vo";
 import { PessoaEntity } from "../pessoa.entity.js";
 
 describe("PessoaEntity", () => {
@@ -41,6 +42,85 @@ describe("PessoaEntity", () => {
 
     assertFail(result, "EMAIL_INVALIDO");
     expect(result.error.message).toBe("Email inválido: email-invalido");
+  });
+
+  describe("nome (Text do core-kernel)", () => {
+    it("guarda o nome sem espaços nas pontas", () => {
+      const pessoa = PessoaEntity.create({
+        name: "  Maria  ",
+        email: "maria@exemplo.com",
+      }).unwrap();
+
+      expect(pessoa.name).toBeInstanceOf(Text);
+      expect(pessoa.name.value).toBe("Maria");
+    });
+
+    it("aceita um nome com exatamente 3 caracteres", () => {
+      assertOk(PessoaEntity.create({ name: "Ana", email: "ana@exemplo.com" }));
+    });
+
+    it.each(["", "   "])("falha com NOME_VAZIO no campo name para %p", (name) => {
+      const result = PessoaEntity.create({ name, email: "maria@exemplo.com" });
+
+      assertFail(result, "NOME_VAZIO");
+      expect(result.error.issues).toEqual([
+        { field: "name", code: "NOME_VAZIO", message: "Nome não pode ser vazio" },
+      ]);
+    });
+
+    it("falha com NOME_CURTO no campo name quando tem menos de 3 caracteres", () => {
+      const result = PessoaEntity.create({ name: " Al ", email: "maria@exemplo.com" });
+
+      expect(result.isFail() && result.error.issues).toEqual([
+        { field: "name", code: "NOME_CURTO", message: "Nome deve ter pelo menos 3 caracteres" },
+      ]);
+    });
+  });
+
+  describe("email (Email do core-kernel)", () => {
+    it("guarda o email sem espaços e em minúsculas", () => {
+      const pessoa = PessoaEntity.create({ name: "Maria", email: " Maria@Exemplo.COM " }).unwrap();
+
+      expect(pessoa.email).toBeInstanceOf(Email);
+      expect(pessoa.email.value).toBe("maria@exemplo.com");
+    });
+
+    it.each(["", "   "])("falha com EMAIL_VAZIO no campo email para %p", (email) => {
+      const result = PessoaEntity.create({ name: "Maria", email });
+
+      assertFail(result, "EMAIL_VAZIO");
+      expect(result.error.issues).toEqual([
+        { field: "email", code: "EMAIL_VAZIO", message: "Email não pode ser vazio" },
+      ]);
+    });
+
+    it("falha com EMAIL_INVALIDO no campo email quando o formato é inválido", () => {
+      const result = PessoaEntity.create({ name: "Maria", email: "email-invalido" });
+
+      expect(result.isFail() && result.error.issues).toEqual([
+        { field: "email", code: "EMAIL_INVALIDO", message: "Email inválido: email-invalido" },
+      ]);
+    });
+
+    it("falha com EMAIL_LONGO quando passa de 254 caracteres", () => {
+      const email = `${"a".repeat(245)}@exemplo.com`;
+      const result = PessoaEntity.create({ name: "Maria", email });
+
+      expect(result.isFail() && result.error.issues).toEqual([
+        {
+          field: "email",
+          code: "EMAIL_LONGO",
+          message: "Email deve ter no máximo 254 caracteres",
+        },
+      ]);
+    });
+
+    it("aceita um email com exatamente 254 caracteres", () => {
+      const email = `${"a".repeat(242)}@exemplo.com`;
+
+      expect(email.length).toBe(254);
+      assertOk(PessoaEntity.create({ name: "Maria", email }));
+    });
   });
 
   it("falha com um único ValidationError com as issues de nome e email quando ambos são inválidos", () => {
