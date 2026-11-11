@@ -49,8 +49,14 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # Só depois do npm: a release no GitHub existe apenas para versões de fato publicadas.
-      # Notas geradas pelo GitHub a partir dos PRs desde a release anterior.
+      # As notas partem da tag de versão imediatamente anterior (ordem semver), passada
+      # explicitamente: sem isso, o GitHub escolhe a "release anterior" por heurística e
+      # já errou (as notas da v0.6.3 saíram a partir da v0.4.0).
       - name: Criar release no GitHub
-        run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "${GITHUB_REF_NAME#v}" --generate-notes
+        run: |
+          git fetch --tags --quiet
+          ANTERIOR=$(git tag --list 'v*.*.*' --sort=-v:refname | grep -A1 -x "$GITHUB_REF_NAME" | sed -n 2p)
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "${GITHUB_REF_NAME#v}" \
+            --generate-notes ${ANTERIOR:+--notes-start-tag "$ANTERIOR"}
         env:
           GH_TOKEN: ${{ github.token }}
