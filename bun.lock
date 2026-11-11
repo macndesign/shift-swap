@@ -8,13 +8,13 @@
         "@arethetypeswrong/cli": "^0.18.5",
         "@biomejs/biome": "^2.5.14",
         "bun-types": "^1.4.2",
-        "core-kernel": "^0.2.0",
+        "core-kernel": "^0.3.1",
         "lint-staged": "^17.5.1",
         "simple-git-hooks": "^2.14.0",
         "typescript": "^5",
       },
       "peerDependencies": {
-        "core-kernel": "^0.2.0",
+        "core-kernel": ">=0.2.0 <0.4.0",
       },
     },
   },
@@ -81,7 +81,7 @@
 
     "commander": ["commander@10.0.1", "", {}, "sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug=="],
 
-    "core-kernel": ["core-kernel@0.2.0", "", { "bin": { "core-kernel": "dist/cli/index.js" } }, "sha512-eF56iSCYPOTlCYohYfdn0+y0aMG3FJSWSNj9LZfnoHx7HC5djOjxA0tjAxOXe86vcM4vKwHonxsZZhtykc4ajg=="],
+    "core-kernel": ["core-kernel@0.3.1", "", { "bin": { "core-kernel": "dist/cli/index.js" } }, "sha512-QxbsIq7ZeThyX7cwAusHRABd73Bg4tyBRApO+1mUMvOiAD5C6SlYCDv6DHd8BmYfcYgsLzj1xQt33TgLCLIVFw=="],
 
     "emoji-regex": ["emoji-regex@8.0.0", "", {}, "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="],
 
