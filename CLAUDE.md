@@ -164,6 +164,8 @@ exportados de propósito: os repositórios in-memory (só para teste) e os bloco
 ```bash
 bun run lint                              # Biome: formatação + lint
 bun run typecheck                         # type-check completo (inclui testes)
+bun run check:ddd                         # core-kernel-check: bugs que compilam no uso do core-kernel
+bun run check:skills                      # skills/agentes do core-kernel em .claude/ em dia
 bun test                                  # suíte inteira
 bun run test:coverage                     # suíte + meta de cobertura por arquivo (bunfig.toml)
 bun run build                             # build real: ESM + CJS + .d.ts (ESM e CJS)
@@ -172,6 +174,12 @@ bun run check:package                     # attw: tipos publicados resolvem em N
 
 O CI (`.github/workflows/ci.yml`) roda exatamente essa sequência (com `test:coverage`), e o
 `publish.yml` a reaproveita via `workflow_call` antes de publicar.
+
+As skills (`.claude/skills/ddd-*`) e os agentes (`.claude/agents/`: `ddd-architect`,
+`ddd-reviewer`, `core-kernel-migrator`) vêm do core-kernel, instalados pelo CLI dele; o estado
+fica em `core-kernel.skills.json` (gerado, fora do Biome). Não edite esses arquivos à mão — o
+`check:skills` reprova edições locais. Ao subir o core-kernel, rode
+`bunx core-kernel skills update && bunx core-kernel agents update`.
 
 `npx tsc` direto pode falhar com um erro enganoso ("This is not the tsc command you are
 looking for") — use os scripts do `package.json` (`bun run typecheck`), que resolvem o

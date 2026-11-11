@@ -1,0 +1,34 @@
+{
+  "version": "0.3.1",
+  "targets": [
+    "claude"
+  ],
+  "skills": {
+    "claude": {
+      "ddd-aggregate-events": "d5b7fea14fffe8911c2f6a72aa576d36b4f6bf3cf8de0eb8cff507d042231eea",
+      "ddd-domain-service": "09d2fbcef60caabed24a1f8a8992002786078b79aef46294c491d77674876d64",
+      "ddd-dto": "70f3a1d16eca397f1c1b7c6633309a0a1baf7e7822eda33b4b43843aadc85481",
+      "ddd-entity": "e07de9024f577de206e852f19328f11c0adfd918e408974778a10ee0dae467cb",
+      "ddd-migration": "79e04f07b818cdd6198bb7de0972aebe2bcbd64c42a07690757fe58bd45cd488",
+      "ddd-query-cqrs": "f83d843fd4e61c75f13d084613848a770b63197232074b202a76fa40b8bf261d",
+      "ddd-repository": "69dc0594cd14a96a149a4d6015c1575e1131565f8d570575a979d9eb3474f3e4",
+      "ddd-result-errors": "4910e536cf5efcad46a9371d6d3663dbd90b803237902700bb97b1a22d565423",
+      "ddd-testing": "3b0a4161205d6cdbe416899cb6b24c3a668494e66da91e1cf0c2824d66a79667",
+      "ddd-use-case": "a9ed47ff8d5bbd3bbe4d4b1908dfc66fea9c5e275c207ec58e8a557092df9ed0",
+      "ddd-value-object": "b77065f830dba2852555883fdce748d85779f6eca68a572a5dbae3bb20572645"
+    }
+  },
+  "agents": {
+    "version": "0.3.1",
+    "targets": [
+      "claude"
+    ],
+    "items": {
+      "claude": {
+        "core-kernel-migrator": "7b7e1c23d982d96dd9a0df79673825564a7c3f280ed6c273ee9576b4081cdbd5",
+        "ddd-architect": "c8ec06a408c6f9ee7d37cedd885d5ea7f1faf2dc4cd4b7ddd7c5b08f170b4d6b",
+        "ddd-reviewer": "0f34050427a1a88f427a4622e7c319a3daf8bb55b58f58845c37bdf00bb919d4"
+      }
+    }
+  }
+}

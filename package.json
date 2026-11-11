@@ -42,13 +42,16 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "prepare": "node scripts/prepare.mjs",
-    "check:package": "attw --pack . --profile node16"
+    "check:package": "attw --pack . --profile node16",
+    "check:ddd": "core-kernel-check",
+    "check:skills": "core-kernel skills check && core-kernel agents check"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@biomejs/biome": "^2.5.14",
     "bun-types": "^1.4.2",
     "core-kernel": "^0.3.1",
+    "core-kernel-check": "^0.1.0",
     "lint-staged": "^17.5.1",
     "simple-git-hooks": "^2.14.0",
     "typescript": "^5"
