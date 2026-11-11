@@ -1,0 +1,8 @@
+[test]
+# Dublês de teste (repositórios in-memory, fixtures) não entram na conta da cobertura.
+coveragePathIgnorePatterns = ["**/__tests__/**", "**/__mocks__/**"]
+
+# O Bun confere a meta por ARQUIVO, não pela média geral: qualquer arquivo abaixo dela
+# faz `bun test --coverage` sair com código 1. Funções ficam mais baixas porque o Bun conta
+# como função não chamada o que não tem corpo testável (ex.: as classes de id em ids.ts).
+coverageThreshold = { lines = 0.9, functions = 0.5 }

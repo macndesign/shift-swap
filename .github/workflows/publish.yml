@@ -9,19 +9,41 @@ permissions:
   contents: read
 
 jobs:
+  # Mesmas verificações do CI (lint, type-check, cobertura, build, attw) antes de publicar.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   publish:
+    needs: ci
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # assinatura de provenance no npm
     steps:
       - uses: actions/checkout@v4
 
+      - name: Conferir tag × versão do package.json
+        run: |
+          VERSAO=$(node -p "require('./package.json').version")
+          if [ "${GITHUB_REF_NAME}" != "v${VERSAO}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} não bate com a versão ${VERSAO} do package.json"
+            exit 1
+          fi
+
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
 
-      - run: bun install
-
-      - run: bun test
+      - run: bun install --frozen-lockfile
 
       - run: bun run build
 
-      - run: bun publish --access public
+      # npm em vez de `bun publish`: o Bun ainda não gera provenance (--provenance).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - run: npm publish --provenance --access public
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
