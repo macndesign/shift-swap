@@ -262,6 +262,15 @@ sai com [provenance](https://docs.npmjs.com/generating-provenance-statements) (v
 `npm publish --provenance`). Requer o secret `NPM_TOKEN` configurado no repositório do GitHub
 (Settings → Secrets and variables → Actions), gerado como Automation Token em npmjs.com.
 
+Depois de publicar no npm, o mesmo workflow cria a release no GitHub (título `X.Y.Z`, notas
+geradas a partir dos PRs desde a release anterior), então não é preciso criá-la à mão. Se só
+esse último passo falhar, o pacote já está no npm — não rode o workflow de novo (o
+`npm publish` falharia por versão repetida); crie a release manualmente:
+
+```bash
+gh release create vX.Y.Z --verify-tag --title X.Y.Z --generate-notes
+```
+
 Depois, abra um PR de `chore/release-vX.Y.Z` para `master` e faça o merge usando
 **"Create a merge commit"** (não "Squash" nem "Rebase") — isso preserva o SHA exato do
 commit pro qual a tag aponta, mantendo a tag consistente com o histórico do `master`.
