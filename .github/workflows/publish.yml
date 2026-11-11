@@ -52,9 +52,12 @@ jobs:
       # As notas partem da tag de versão imediatamente anterior (ordem semver), passada
       # explicitamente: sem isso, o GitHub escolhe a "release anterior" por heurística e
       # já errou (as notas da v0.6.3 saíram a partir da v0.4.0).
+      # `--force` é necessário: o checkout cria a tag do push como tag leve apontando para o
+      # commit, e o `npm version` gera tag anotada; sem `--force` o fetch rejeita a troca
+      # ("would clobber existing tag") e sai com 1 — em silêncio, por causa do `--quiet`.
       - name: Criar release no GitHub
         run: |
-          git fetch --tags --quiet
+          git fetch --tags --force --quiet
           ANTERIOR=$(git tag --list 'v*.*.*' --sort=-v:refname | grep -A1 -x "$GITHUB_REF_NAME" | sed -n 2p)
           gh release create "$GITHUB_REF_NAME" --verify-tag --title "${GITHUB_REF_NAME#v}" \
             --generate-notes ${ANTERIOR:+--notes-start-tag "$ANTERIOR"}
