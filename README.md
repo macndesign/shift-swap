@@ -242,7 +242,8 @@ bun run build     # gera dist/ (ESM + CJS + .d.ts), com core-kernel externo
 
 ## Release
 
-CI (`.github/workflows/ci.yml`) roda testes e build em todo push/PR para `master`.
+CI (`.github/workflows/ci.yml`) roda lint, type-check, testes com meta de cobertura, build
+e checagem do pacote em todo push/PR para `master`.
 Como `master` é uma branch protegida (só aceita mudanças via PR), o bump de versão
 precisa passar por uma branch antes de virar tag:
 
@@ -255,8 +256,11 @@ git push origin HEAD --follow-tags
 O push acima envia a branch **e** a tag `vX.Y.Z` (tags não são bloqueadas pela proteção
 do branch, só o `master` em si). A tag já dispara `.github/workflows/publish.yml`
 sozinha — a publicação no npm acontece nesse momento, **antes mesmo do PR ser
-mergeado**. Requer o secret `NPM_TOKEN` configurado no repositório do GitHub (Settings
-→ Secrets and variables → Actions), gerado como Automation Token em npmjs.com.
+mergeado**. Antes de publicar, o workflow roda as mesmas verificações do CI e confere se a
+tag bate com a `version` do `package.json` (qualquer falha interrompe a publicação). O pacote
+sai com [provenance](https://docs.npmjs.com/generating-provenance-statements) (via
+`npm publish --provenance`). Requer o secret `NPM_TOKEN` configurado no repositório do GitHub
+(Settings → Secrets and variables → Actions), gerado como Automation Token em npmjs.com.
 
 Depois, abra um PR de `chore/release-vX.Y.Z` para `master` e faça o merge usando
 **"Create a merge commit"** (não "Squash" nem "Rebase") — isso preserva o SHA exato do

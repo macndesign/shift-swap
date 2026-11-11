@@ -44,17 +44,21 @@ exportar em `src/index.ts`.
 
 ```bash
 bun run lint                              # formatação + lint (Biome)
-bun test                                  # suíte inteira
-./node_modules/.bin/tsc.exe --noEmit      # type-check completo (inclui testes)
+bun run typecheck                         # type-check completo (inclui testes)
+bun run test:coverage                     # suíte inteira + meta de cobertura (bunfig.toml)
 bun run build                             # confirma que o build real (ESM/CJS/.d.ts) funciona
+bun run check:package                     # tipos publicados resolvem em Node ESM/CJS e bundler
 ```
 
-Essas verificações são o que o CI também roda — rodá-las localmente evita idas e vindas
-no PR. `bun run lint:fix`/`bun run format` corrigem automaticamente o que der.
+Essas verificações são o que o CI também roda, na mesma ordem — rodá-las localmente evita
+idas e vindas no PR. `bun run lint:fix`/`bun run format` corrigem automaticamente o que der.
+
+A meta de cobertura vale **por arquivo** (não pela média geral): se um arquivo novo ou
+alterado ficar abaixo dela, `bun run test:coverage` falha e o CI também.
 
 Um hook de pre-commit (`simple-git-hooks` + `lint-staged`) já roda `biome check --write`
 nos arquivos staged a cada commit, então a maior parte da formatação é resolvida sozinha.
-Ele é instalado automaticamente no `bun install` (via `postinstall`).
+Ele é instalado automaticamente no `bun install` (via script `prepare`).
 
 ### 5. Commit
 
@@ -72,8 +76,9 @@ git commit -m "feat: adiciona use-case de listar turnos por período"
 - Descreva o problema que a mudança resolve e, se for uma decisão de negócio (novo
   campo em entidade, nova regra de validação), explique o raciocínio — isso ajuda na
   revisão.
-- O CI (`.github/workflows/ci.yml`) roda testes e build automaticamente no PR; ele
-  precisa passar antes do merge.
+- O CI (`.github/workflows/ci.yml`) roda automaticamente no PR as verificações do passo 4
+  (lint, type-check, testes com meta de cobertura, build e checagem do pacote), com
+  `bun install --frozen-lockfile`; ele precisa passar antes do merge.
 
 ## Reportando bugs ou sugerindo features
 

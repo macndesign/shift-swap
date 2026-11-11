@@ -160,15 +160,22 @@ exportados de propósito: os repositórios in-memory (só para teste) e os bloco
 
 ```bash
 bun run lint                              # Biome: formatação + lint
+bun run typecheck                         # type-check completo (inclui testes)
 bun test                                  # suíte inteira
-./node_modules/.bin/tsc.exe --noEmit      # type-check completo (inclui testes)
+bun run test:coverage                     # suíte + meta de cobertura por arquivo (bunfig.toml)
 bun run build                             # build real: ESM + CJS + .d.ts (ESM e CJS)
 bun run check:package                     # attw: tipos publicados resolvem em Node ESM/CJS e bundler
 ```
 
-Neste ambiente, `npx tsc`/`tsc` direto falha com um erro enganoso ("This is not the tsc
-command you are looking for") — sempre use o binário local (`./node_modules/.bin/tsc.exe`)
-ou os scripts do `package.json`.
+O CI (`.github/workflows/ci.yml`) roda exatamente essa sequência (com `test:coverage`), e o
+`publish.yml` a reaproveita via `workflow_call` antes de publicar.
+
+`npx tsc` direto pode falhar com um erro enganoso ("This is not the tsc command you are
+looking for") — use os scripts do `package.json` (`bun run typecheck`), que resolvem o
+binário local.
+
+A meta de cobertura (`bunfig.toml`) é conferida **por arquivo**, e `__tests__`/`__mocks__`
+ficam fora da conta. Não baixe a meta para fazer um arquivo passar: escreva o teste.
 
 Formatação e lint são via [Biome](https://biomejs.dev) (`biome.json`), não ESLint/Prettier
 — decisão consciente pra manter uma dependência só, dado o resto do projeto ser minimalista
