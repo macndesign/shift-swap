@@ -216,6 +216,43 @@ base no papel do usuário logado.
 > sem executar transições (não reatribui o turno nem regrava `decididoEm`) e valida se os
 > dados são coerentes com o status (`DADOS_INCOERENTES`).
 
+## Migrando da 0.6 para a 0.7
+
+Na 0.7, o nome e o e-mail das pessoas (`FuncionarioEntity`, `SupervisorEntity`) passaram a usar os
+Value Objects prontos do core-kernel. A faixa do `core-kernel` não mudou (`>=0.2.0 <0.4.0`).
+
+| Antes (0.6) | Agora (0.7) |
+| --- | --- |
+| `import { NameVO, EmailVO } from "shift-swap"` | Não existem mais: `import { Text, Email } from "core-kernel/vo"` |
+| `pessoa.name` é `NameVO`, `pessoa.email` é `EmailVO` | `pessoa.name` é `Text`, `pessoa.email` é `Email` (`.value` continua sendo a string) |
+| Reidratar com `NameVO.create(row.name).unwrap()` / `EmailVO.create(row.email).unwrap()` | `Text.create(row.name).unwrap()` / `Email.create(row.email).unwrap()` |
+| Validar um campo no frontend com `EmailVO.create(email)` | `FuncionarioEntity.create({ name, email })` e ler `error.issues` por `field` (veja [Ideia geral](#ideia-geral)) |
+| E-mail guardado como veio (`Maria@Exemplo.com`) | Guardado sem espaços e em minúsculas (`maria@exemplo.com`) |
+| Nome guardado como veio (`"  Maria "`) | Guardado sem espaços nas pontas (`"Maria"`) |
+| Sem limite de tamanho para o e-mail | Máximo de 254 caracteres: novo código `EMAIL_LONGO` |
+
+O adapter de repositório fica assim:
+
+```ts
+import { Email, Text } from "core-kernel/vo";
+import { FuncionarioEntity, FuncionarioId } from "shift-swap";
+
+function toDomain(row: { id: string; name: string; email: string }): FuncionarioEntity {
+  return FuncionarioEntity.reconstituir(
+    { name: Text.create(row.name).unwrap(), email: Email.create(row.email).unwrap() },
+    FuncionarioId.from(row.id).unwrap(),
+  );
+}
+```
+
+Os códigos `NOME_VAZIO`, `NOME_CURTO`, `EMAIL_VAZIO` e `EMAIL_INVALIDO` e suas mensagens não
+mudaram, e as issues continuam nos campos `name` e `email`.
+
+**Atenção aos dados já salvos.** Ao reidratar, o e-mail vem em minúsculas mesmo que esteja
+gravado com maiúsculas no banco, e o próximo `update` grava a versão normalizada. Se o banco tem
+índice único ou buscas por e-mail, normalize a coluna antes de atualizar (ex.: em SQL,
+`UPDATE funcionario SET email = lower(trim(email))`) e confira se isso não gera duplicatas.
+
 ## Migrando da 0.5
 
 | Antes (0.5) | Agora (0.6) |
