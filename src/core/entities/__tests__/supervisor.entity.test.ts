@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
+import { supervisorId } from "../../__tests__/fixtures.js";
+import { EmailVO } from "../email.vo.js";
+import { NameVO } from "../name.vo.js";
 import { PessoaEntity } from "../pessoa.entity.js";
 import { SupervisorEntity } from "../supervisor.entity.js";
 
@@ -44,5 +47,22 @@ describe("SupervisorEntity", () => {
 
     assertFail(result, "EMAIL_INVALIDO");
     expect(result.error.message).toBe("Email inválido: email-invalido");
+  });
+
+  describe("reconstituir", () => {
+    it("reidrata o supervisor com o id e os dados salvos", () => {
+      const supervisor = SupervisorEntity.reconstituir(
+        {
+          name: NameVO.create("Maria").unwrap(),
+          email: EmailVO.create("maria@exemplo.com").unwrap(),
+        },
+        supervisorId("sup-salvo"),
+      );
+
+      expect(supervisor).toBeInstanceOf(SupervisorEntity);
+      expect(supervisor.id.value).toBe("sup-salvo");
+      expect(supervisor.name.value).toBe("Maria");
+      expect(supervisor.email.value).toBe("maria@exemplo.com");
+    });
   });
 });

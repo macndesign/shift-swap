@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { assertFail, assertOk } from "core-kernel/testing";
-import { funcionarioId } from "../../__tests__/fixtures.js";
+import { funcionarioId, turnoId } from "../../__tests__/fixtures.js";
 import { Turno } from "../turno.entity.js";
 
 describe("Turno", () => {
@@ -151,5 +151,25 @@ describe("Turno", () => {
 
     assertFail(result, "TURNO_JA_PERTENCE_AO_FUNCIONARIO");
     expect(result.error.message).toBe("O turno já pertence a esse funcionário");
+  });
+
+  describe("reconstituir", () => {
+    it("reidrata o turno com o id e os dados salvos", () => {
+      const turno = Turno.reconstituir(
+        {
+          data: "2026-09-24",
+          horaInicio: "08:00",
+          horaFim: "12:00",
+          funcionarioId: funcionarioId("func-a"),
+        },
+        turnoId("turno-salvo"),
+      );
+
+      expect(turno.id.value).toBe("turno-salvo");
+      expect(turno.data).toBe("2026-09-24");
+      expect(turno.horaInicio).toBe("08:00");
+      expect(turno.horaFim).toBe("12:00");
+      expect(turno.funcionarioId.value).toBe("func-a");
+    });
   });
 });
