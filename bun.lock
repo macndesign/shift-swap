@@ -9,6 +9,7 @@
         "@biomejs/biome": "^2.5.14",
         "bun-types": "^1.4.2",
         "core-kernel": "^0.3.1",
+        "core-kernel-check": "^0.1.0",
         "lint-staged": "^17.5.1",
         "simple-git-hooks": "^2.14.0",
         "typescript": "^5",
@@ -82,6 +83,8 @@
     "commander": ["commander@10.0.1", "", {}, "sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug=="],
 
     "core-kernel": ["core-kernel@0.3.1", "", { "bin": { "core-kernel": "dist/cli/index.js" } }, "sha512-QxbsIq7ZeThyX7cwAusHRABd73Bg4tyBRApO+1mUMvOiAD5C6SlYCDv6DHd8BmYfcYgsLzj1xQt33TgLCLIVFw=="],
+
+    "core-kernel-check": ["core-kernel-check@0.1.0", "", { "dependencies": { "typescript": "~5.9.2" }, "peerDependencies": { "core-kernel": "^0.2.0 || ^0.3.0" }, "bin": { "core-kernel-check": "dist/bin.js" } }, "sha512-YIz951LNMYJwqjWXMQCb6YBb3xue6MlWwX/lVyeef3LEX04MaRq41Qfusqd+/F+7bKWqBJSkzQ/2IVNxGwRhUA=="],
 
     "emoji-regex": ["emoji-regex@8.0.0", "", {}, "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="],
 

@@ -28,6 +28,12 @@ jobs:
       # Type-check completo, incluindo os testes (o build:types exclui __tests__).
       - run: bun run typecheck
 
+      # Bugs que compilam no uso do core-kernel (regras CK001–CK008 do core-kernel-check).
+      - run: bun run check:ddd
+
+      # Skills e agentes do core-kernel em .claude/ batem com a versão instalada (sem edições locais).
+      - run: bun run check:skills
+
       # Falha se algum arquivo ficar abaixo da meta de cobertura do bunfig.toml.
       - run: bun run test:coverage
 
