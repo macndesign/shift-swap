@@ -107,7 +107,10 @@ kebab-case terminando no sufixo do tipo: `*.entity.ts`, `*.vo.ts`, `*.usecase.ts
 ### Value Objects
 Estendem `ValueObject<T>` do core-kernel, `static create(raw, campo?): Result<Vo, ValidationError>`,
 validando com `Guard` e passando `{ field, code, message }` em português. (`NameVO`/`EmailVO` são
-próprios porque os VOs prontos do core-kernel não permitem trocar código/mensagem.)
+próprios, e não `Text`/`Email` de `core-kernel/vo`, porque guardam o valor como veio: o `Email`
+do core-kernel normaliza com trim + lowercase e o `Text` guarda o texto sem espaços nas pontas. Desde a
+0.2.0 os VOs prontos aceitam `errors` para trocar código/mensagem, então isso não é mais
+impedimento; trocar mudaria o valor guardado e a API pública, e é decisão de negócio.)
 
 ### Erros
 - Toda falha é um erro tipado do core-kernel com `code` de `CODIGOS_ERRO`: `ValidationError`
