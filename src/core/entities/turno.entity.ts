@@ -134,7 +134,7 @@ class Turno extends Entity<TurnoProps, TurnoId> {
 
   /** Reidratação pelo adapter de repositório: dados já persistidos, sem validação. */
   static reconstituir(props: TurnoProps, id: TurnoId): Turno {
-    return new Turno({ ...props }, id);
+    return new Turno(props, id);
   }
 }
 

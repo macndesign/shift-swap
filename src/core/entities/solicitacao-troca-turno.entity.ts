@@ -183,7 +183,7 @@ class SolicitacaoTrocaTurno extends Entity<SolicitacaoTrocaTurnoProps, Solicitac
     }
 
     return SolicitacaoTrocaTurno.validarCoerencia(props).map(
-      () => new SolicitacaoTrocaTurno({ ...props }, id),
+      () => new SolicitacaoTrocaTurno(props, id),
     );
   }
 
