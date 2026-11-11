@@ -42,16 +42,18 @@ distinção importante é **o que** faz sentido importar em cada lado:
 
 - **Backend (sempre)**: use-cases e ports. Eles pressupõem um repositório de verdade e são a
   autoridade final — validação client-side nunca substitui o que roda aqui.
-- **Frontend (opcional)**: entidades e Value Objects (`NameVO`, `EmailVO`...) podem rodar a
-  *mesma* validação num formulário, para feedback instantâneo. O backend sempre revalida.
+- **Frontend (opcional)**: as entidades podem rodar a *mesma* validação num formulário, para
+  feedback instantâneo. O backend sempre revalida.
 
 ```ts
 // num formulário React, por exemplo
-import { EmailVO } from "shift-swap";
+import { FuncionarioEntity } from "shift-swap";
 
-function validarEmail(email: string): string | null {
-  const result = EmailVO.create(email);
-  return result.isFail() ? result.error.message : null;
+/** Mensagens de erro por campo (`name`, `email`), com os mesmos códigos do backend. */
+function validarFuncionario(dados: { name: string; email: string }): Record<string, string> {
+  const result = FuncionarioEntity.create(dados);
+  if (result.isOk()) return {};
+  return Object.fromEntries(result.error.issues.map((issue) => [issue.field ?? "", issue.message]));
 }
 ```
 
@@ -60,7 +62,8 @@ function validarEmail(email: string): string | null {
 ### 1. Implemente os repositórios com seu banco de dados
 
 ```ts
-import { FuncionarioEntity, FuncionarioId, EmailVO, NameVO, type FuncionarioRepository } from "shift-swap";
+import { Email, Text } from "core-kernel/vo";
+import { FuncionarioEntity, FuncionarioId, type FuncionarioRepository } from "shift-swap";
 import { PrismaClient } from "@prisma/client";
 
 class PrismaFuncionarioRepository implements FuncionarioRepository {
@@ -95,7 +98,7 @@ class PrismaFuncionarioRepository implements FuncionarioRepository {
   /** Dados do banco já foram validados na escrita: reconstituir não revalida. */
   private toDomain(row: { id: string; name: string; email: string }): FuncionarioEntity {
     return FuncionarioEntity.reconstituir(
-      { name: NameVO.create(row.name).unwrap(), email: EmailVO.create(row.email).unwrap() },
+      { name: Text.create(row.name).unwrap(), email: Email.create(row.email).unwrap() },
       FuncionarioId.from(row.id).unwrap(),
     );
   }
@@ -166,16 +169,15 @@ base no papel do usuário logado.
 | --- | --- |
 | `CODIGOS_ERRO`, `CodigoErro` | Todos os códigos de erro do domínio (ex.: `TURNO_NAO_ENCONTRADO`, `CONFLITO_DE_HORARIO`, `TRANSICAO_INVALIDA`). Além deles, aparecem os genéricos do core-kernel `VALIDATION_FAILED` e `UNEXPECTED`. |
 
-### Entidades, Value Objects e ids
+### Entidades e ids
 | Export | Descrição |
 | --- | --- |
 | `FuncionarioEntity` | Pessoa que executa turnos e solicita trocas |
 | `SupervisorEntity` | Pessoa com visão de todos os turnos |
 | `Turno` | Um turno de trabalho (`data`, `horaInicio`, `horaFim` em horário local; dono atual) |
 | `SolicitacaoTrocaTurno`, `StatusSolicitacaoTrocaTurno` | Pedido de troca de um turno **direcionado a um colega**. O destinatário aceita ou recusa; se aceitar, o supervisor autoriza ou não. Ciclo de vida: `pendente` → `aguardando_aprovacao` → `aprovada`/`rejeitada`; ou `pendente` → `recusada`; `cancelada` e `expirada` valem enquanto em aberto |
-| `NameVO`, `EmailVO` | Value Objects usados por `FuncionarioEntity`/`SupervisorEntity` |
 | `FuncionarioId`, `SupervisorId`, `TurnoId`, `SolicitacaoTrocaTurnoId` | Ids tipados (`XxxId.from(string)`, `.value`) |
-| `PessoaProps`, `TurnoProps`, `ReconstituirSolicitacaoTrocaTurnoProps`... | Tipos das props, para os adapters reconstituírem as entidades |
+| `PessoaProps`, `TurnoProps`, `ReconstituirSolicitacaoTrocaTurnoProps`... | Tipos das props, para os adapters reconstituírem as entidades. Em `PessoaProps`, `name` é um `Text` e `email` um `Email`, ambos de `core-kernel/vo` (o e-mail é guardado em minúsculas) |
 
 ### Ports (implemente com seu banco)
 | Export | Métodos |
